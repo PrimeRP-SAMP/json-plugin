@@ -1,0 +1,9 @@
+[submodule "third-party/json"]
+	path = third-party/json
+	url = https://github.com/nlohmann/json
+[submodule "third-party/samp-ptl"]
+	path = third-party/samp-ptl
+	url = https://github.com/katursis/samp-ptl
+[submodule "third-party/samp-cmake"]
+	path = third-party/samp-cmake
+	url = https://github.com/katursis/samp-cmake-modules/

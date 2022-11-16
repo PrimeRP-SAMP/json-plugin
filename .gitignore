@@ -1,0 +1,14 @@
+# CLion or some other IDE from JetBrains
+/.idea
+/cmake-build-*
+
+# Visual Studio / Visual Studio Code
+/.vs/
+/.vscode/
+/out/
+
+# clangd cache
+/.cache/
+
+# build directories (vscode-cmake-tools, user-defined and etc)
+/build*/
