@@ -64,4 +64,4 @@ enum {
   kNodeTypeMax
 };
 
-constexpr cell kInvalidNodeId = -1;
+constexpr cell kInvalidNodeId = 0;
