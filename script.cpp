@@ -63,8 +63,9 @@ call_result_t script::JSON_SaveFile(const std::filesystem::path filename, const 
         return kCallNoSuchDirectoryError;
       }
     }
-    std::ofstream o(filename);
-    o << node_id->dump(indent, ' ', true, nlohmann::json::error_handler_t::ignore) << std::endl;
+    std::ofstream o(filename, std::ofstream::out | std::ofstream::trunc);
+    o.clear();
+    o << node_id->dump(indent) << std::endl;
     return kCallNoError;
   } catch (const std::exception &e) {
     LOG_EXCEPTION(e);
@@ -75,7 +76,7 @@ call_result_t script::JSON_SaveFile(const std::filesystem::path filename, const 
 call_result_t script::JSON_Stringify(const node_ptr_t node_id, cell *out, const cell out_size, const cell indent) {
   ASSERT_NODE_EXISTS(node_id);
   try {
-    auto str = node_id->dump(indent, ' ', true, nlohmann::json::error_handler_t::ignore);
+    auto str = node_id->dump(indent);
     SetString(out, str, out_size);
     return kCallNoError;
   } catch (const std::exception &e) {
