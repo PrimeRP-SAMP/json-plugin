@@ -31,37 +31,9 @@
 #include "samp-ptl/ptl.h"
 
 // Plugin types
-
-// This is a pointer, not a default id
 typedef nlohmann::json *node_ptr_t;
 typedef cell node_ptr_result_t;
 typedef cell call_result_t;
 typedef cell node_type_t;
 
-// Calls results
-enum {
-  kCallNoError,
-  kCallUnknownError,
-  kCallNodeNotExistsError,
-  kCallParserError,
-  kCallNoFileError,
-  kCallNoSuchDirectoryError,
-  kCallWrongTypeError,
-  kCallNoReturnStringError,
-
-  kCallMaxError
-};
-
-// Nodes types
-enum {
-  kNodeTypeNull,
-  kNodeTypeBoolean,
-  kNodeTypeNumber,
-  kNodeTypeString,
-  kNodeTypeObject,
-  kNodeTypeArray,
-
-  kNodeTypeMax
-};
-
-constexpr cell kInvalidNodeId = 0;
+#include "YAPJ.inc"

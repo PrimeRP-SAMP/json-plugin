@@ -24,76 +24,76 @@
 
 #define PLUGIN_LOG(text, ...) Log("%s: %d: unknown error: " text, __FUNCTION__, __LINE__ __VA_OPT__(,) __VA_ARGS__)
 #define LOG_EXCEPTION(exc) Log("%s: %d: unknown exception: %s", __FUNCTION__, __LINE__, (exc).what())
-#define ASSERT_NODE_EXISTS(x) if ((x) == nullptr) { Log("%s: %d: error: node not exists", __FUNCTION__, __LINE__); return kCallNodeNotExistsError; }
+#define ASSERT_NODE_EXISTS(x) if ((x) == nullptr) { Log("%s: %d: error: node not exists", __FUNCTION__, __LINE__); return JSON_CALL_NODE_NOT_EXISTS_ERROR; }
 
-call_result_t script::JSON_Parse(const std::string buffer, node_ptr_t *node_id) {
-  ASSERT_NODE_EXISTS(node_id);
+call_result_t script::JSON_Parse(const std::string buffer, node_ptr_t *node) {
+  ASSERT_NODE_EXISTS(node);
   try {
-    *node_id = new nlohmann::json(nlohmann::json::parse(buffer));
-    return kCallNoError;
+    *node = new nlohmann::json(nlohmann::json::parse(buffer));
+    return JSON_CALL_NO_ERROR;
   } catch (const std::exception &e) {
     LOG_EXCEPTION(e);
-    return kCallParserError;
+    return JSON_CALL_PARSER_ERROR;
   }
 }
 
-call_result_t script::JSON_ParseFile(const std::filesystem::path filename, node_ptr_t *node_id) {
-  ASSERT_NODE_EXISTS(node_id);
+call_result_t script::JSON_ParseFile(const std::filesystem::path filename, node_ptr_t *node) {
+  ASSERT_NODE_EXISTS(node);
   try {
     if (!exists(filename) || !is_regular_file(filename)) {
-      return kCallNoFileError;
+      return JSON_CALL_NO_SUCH_FILE_ERROR;
     }
     std::ifstream f(filename);
-    *node_id = new nlohmann::json(nlohmann::json::parse(f));
-    return kCallNoError;
+    *node = new nlohmann::json(nlohmann::json::parse(f));
+    return JSON_CALL_NO_ERROR;
   } catch (const std::exception &e) {
     LOG_EXCEPTION(e);
-    return kCallParserError;
+    return JSON_CALL_PARSER_ERROR;
   }
 }
 
-call_result_t script::JSON_SaveFile(const std::filesystem::path filename, const node_ptr_t node_id, const cell indent) {
-  ASSERT_NODE_EXISTS(node_id);
+call_result_t script::JSON_SaveFile(const std::filesystem::path filename, const node_ptr_t node, const cell indent) {
+  ASSERT_NODE_EXISTS(node);
   try {
     auto parent_path = filename.parent_path();
     if (!parent_path.empty()) {
       if (!exists(parent_path)) {
         create_directories(filename.parent_path());
       } else if (!is_directory(filename.parent_path())) {
-        return kCallNoSuchDirectoryError;
+        return JSON_CALL_NO_SUCH_DIRECTORY_ERROR;
       }
     }
     std::ofstream o(filename, std::ofstream::out | std::ofstream::trunc);
     o.clear();
-    o << node_id->dump(indent) << std::endl;
-    return kCallNoError;
+    o << node->dump(indent) << std::endl;
+    return JSON_CALL_NO_ERROR;
   } catch (const std::exception &e) {
     LOG_EXCEPTION(e);
-    return kCallParserError;
+    return JSON_CALL_PARSER_ERROR;
   }
 }
 
-call_result_t script::JSON_Stringify(const node_ptr_t node_id, cell *out, const cell out_size, const cell indent) {
-  ASSERT_NODE_EXISTS(node_id);
+call_result_t script::JSON_Stringify(const node_ptr_t node, cell *out, const cell out_size, const cell indent) {
+  ASSERT_NODE_EXISTS(node);
   try {
-    auto str = node_id->dump(indent);
+    auto str = node->dump(indent);
     SetString(out, str, out_size);
-    return kCallNoError;
+    return JSON_CALL_NO_ERROR;
   } catch (const std::exception &e) {
     LOG_EXCEPTION(e);
-    return kCallUnknownError;
+    return JSON_CALL_UNKNOWN_ERROR;
   }
 }
 
-node_type_t script::JSON_NodeType(const node_ptr_t node_id) {
-  ASSERT_NODE_EXISTS(node_id);
+node_type_t script::JSON_NodeType(const node_ptr_t node) {
+  ASSERT_NODE_EXISTS(node);
   using value_t = nlohmann::json::value_t;
-  switch (node_id->type()) {
-  case value_t::null:return kNodeTypeNull;
-  case value_t::object:return kNodeTypeObject;
-  case value_t::array:return kNodeTypeArray;
-  case value_t::string:return kNodeTypeString;
-  case value_t::boolean:return kNodeTypeBoolean;
+  switch (node->type()) {
+  case value_t::null:return JSON_NODE_NULL;
+  case value_t::object:return JSON_NODE_OBJECT;
+  case value_t::array:return JSON_NODE_ARRAY;
+  case value_t::string:return JSON_NODE_STRING;
+  case value_t::boolean:return JSON_NODE_BOOLEAN;
     /*case value_t::binary:
       return "binary";
     case value_t::discarded:
@@ -101,7 +101,7 @@ node_type_t script::JSON_NodeType(const node_ptr_t node_id) {
   case value_t::number_integer:
   case value_t::number_unsigned:
   case value_t::number_float:
-  default:return kNodeTypeNumber;
+  default:return JSON_NODE_NUMBER;
   }
 }
 
@@ -165,11 +165,11 @@ node_ptr_result_t script::JSON_Append(const node_ptr_t first_node, const node_pt
   ASSERT_NODE_EXISTS(second_node);
   if (!first_node->is_object() && !first_node->is_array()) {
     PLUGIN_LOG("First array type does not equal to required one");
-    return kCallWrongTypeError;
+    return JSON_CALL_WRONG_TYPE_ERROR;
   }
   if (second_node->type() != first_node->type()) {
     PLUGIN_LOG("Second array type does not equal to first one");
-    return kCallWrongTypeError;
+    return JSON_CALL_WRONG_TYPE_ERROR;
   }
   auto copy_first_node = new nlohmann::json(*first_node);
   if (copy_first_node->is_object()) {
@@ -181,148 +181,152 @@ node_ptr_result_t script::JSON_Append(const node_ptr_t first_node, const node_pt
 }
 
 template<typename T>
-call_result_t script::internal_JSON_SetValue(node_ptr_t node_id, const std::string key, const T value) {
-  ASSERT_NODE_EXISTS(node_id);
-  (*node_id)[key] = value;
-  return kCallNoError;
+call_result_t script::internal_JSON_SetValue(node_ptr_t node, const std::string key, const T value) {
+  ASSERT_NODE_EXISTS(node);
+  (*node)[key] = value;
+  return JSON_CALL_NO_ERROR;
 }
 
-call_result_t script::JSON_SetNull(node_ptr_t node_id, const std::string key) {
-  return internal_JSON_SetValue(node_id, key, nullptr);
+call_result_t script::JSON_SetNull(node_ptr_t node, const std::string key) {
+  return internal_JSON_SetValue(node, key, nullptr);
 }
 
-call_result_t script::JSON_SetBool(node_ptr_t node_id, const std::string key, bool value) {
-  return internal_JSON_SetValue(node_id, key, value);
+call_result_t script::JSON_SetBool(node_ptr_t node, const std::string key, bool value) {
+  return internal_JSON_SetValue(node, key, value);
 }
 
-call_result_t script::JSON_SetInt(node_ptr_t node_id, const std::string key, cell value) {
-  return internal_JSON_SetValue(node_id, key, value);
+call_result_t script::JSON_SetInt(node_ptr_t node, const std::string key, cell value) {
+  return internal_JSON_SetValue(node, key, value);
 }
 
-call_result_t script::JSON_SetFloat(node_ptr_t node_id, const std::string key, float value) {
-  return internal_JSON_SetValue(node_id, key, value);
+call_result_t script::JSON_SetFloat(node_ptr_t node, const std::string key, float value) {
+  return internal_JSON_SetValue(node, key, value);
 }
 
-call_result_t script::JSON_SetString(node_ptr_t node_id, const std::string key, std::string value) {
-  return internal_JSON_SetValue(node_id, key, cp2utf(value));
+call_result_t script::JSON_SetString(node_ptr_t node, const std::string key, std::string value) {
+  return internal_JSON_SetValue(node, key, cp2utf(value));
 }
 
-call_result_t script::JSON_SetObject(node_ptr_t node_id, const std::string key, node_ptr_t value_node) {
+call_result_t script::JSON_SetObject(node_ptr_t node, const std::string key, node_ptr_t value_node) {
   ASSERT_NODE_EXISTS(value_node);
-  return internal_JSON_SetValue(node_id, key, *value_node);
+  return internal_JSON_SetValue(node, key, *value_node);
 }
 
-call_result_t script::JSON_SetArray(node_ptr_t node_id, const std::string key, node_ptr_t value_node) {
+call_result_t script::JSON_SetArray(node_ptr_t node, const std::string key, node_ptr_t value_node) {
   ASSERT_NODE_EXISTS(value_node);
-  return internal_JSON_SetValue(node_id, key, *value_node);
+  return internal_JSON_SetValue(node, key, *value_node);
 }
 
-call_result_t script::JSON_GetBool(node_ptr_t node_id, const std::string key, bool *out) {
-  ASSERT_NODE_EXISTS(node_id);
-  if (!node_id->contains(key)) {
+call_result_t script::JSON_GetBool(node_ptr_t node, const std::string key, bool *out) {
+  ASSERT_NODE_EXISTS(node);
+  if (!node->contains(key)) {
     PLUGIN_LOG("Node not exists");
-    return kCallNodeNotExistsError;
+    return JSON_CALL_NODE_NOT_EXISTS_ERROR;
   }
-  if (!(*node_id)[key].is_boolean()) {
+  auto &subnode = (*node)[key];
+  if (!subnode.is_boolean()) {
     PLUGIN_LOG("Array item '%s' type does not equal to required one", key.c_str());
-    return kCallWrongTypeError;
+    return JSON_CALL_WRONG_TYPE_ERROR;
   }
-  *out = (*node_id)[key];
-  return kCallNoError;
+  *out = subnode;
+  return JSON_CALL_NO_ERROR;
 }
 
-call_result_t script::JSON_GetInt(node_ptr_t node_id, const std::string key, cell *out) {
-  ASSERT_NODE_EXISTS(node_id);
-  if (!node_id->contains(key)) {
+call_result_t script::JSON_GetInt(node_ptr_t node, const std::string key, cell *out) {
+  ASSERT_NODE_EXISTS(node);
+  if (!node->contains(key)) {
     PLUGIN_LOG("Node does not have item by key '%s'", key.c_str());
-    return kCallNodeNotExistsError;
+    return JSON_CALL_NODE_NOT_EXISTS_ERROR;
   }
-  if (!(*node_id)[key].is_number_integer()) {
+  auto &subnode = (*node)[key];
+  if (!subnode.is_number_integer()) {
     PLUGIN_LOG("Array item '%s' type does not equal to required one", key.c_str());
-    return kCallWrongTypeError;
+    return JSON_CALL_WRONG_TYPE_ERROR;
   }
-  *out = (*node_id)[key];
-  return kCallNoError;
+  *out = subnode;
+  return JSON_CALL_NO_ERROR;
 }
 
-call_result_t script::JSON_GetFloat(node_ptr_t node_id, const std::string key, float *out) {
-  ASSERT_NODE_EXISTS(node_id);
-  if (!node_id->contains(key)) {
+call_result_t script::JSON_GetFloat(node_ptr_t node, const std::string key, float *out) {
+  ASSERT_NODE_EXISTS(node);
+  if (!node->contains(key)) {
     PLUGIN_LOG("Node does not have item by key '%s'", key.c_str());
-    return kCallNodeNotExistsError;
+    return JSON_CALL_NODE_NOT_EXISTS_ERROR;
   }
-  if (!(*node_id)[key].is_number_float()) {
+  auto &subnode = (*node)[key];
+  if (!subnode.is_number_float()) {
     PLUGIN_LOG("Array item '%s' type does not equal to required one", key.c_str());
-    return kCallWrongTypeError;
+    return JSON_CALL_WRONG_TYPE_ERROR;
   }
-  *out = (*node_id)[key];
-  return kCallNoError;
+  *out = subnode;
+  return JSON_CALL_NO_ERROR;
 }
 
-call_result_t script::JSON_GetString(node_ptr_t node_id, const std::string key, cell *out, cell out_size) {
-  ASSERT_NODE_EXISTS(node_id);
-  if (!node_id->contains(key)) {
+call_result_t script::JSON_GetString(node_ptr_t node, const std::string key, cell *out, cell out_size) {
+  ASSERT_NODE_EXISTS(node);
+  if (!node->contains(key)) {
     PLUGIN_LOG("Node does not have item by key '%s'", key.c_str());
-    return kCallNodeNotExistsError;
+    return JSON_CALL_NODE_NOT_EXISTS_ERROR;
   }
-  auto &node = (*node_id)[key];
-  if (!node.is_string()) {
+  auto &subnode = (*node)[key];
+  if (!subnode.is_string()) {
     PLUGIN_LOG("Array item '%s' type does not equal to required one", key.c_str());
-    return kCallWrongTypeError;
+    return JSON_CALL_WRONG_TYPE_ERROR;
   }
-  auto str = utf2cp(node);
+  auto str = utf2cp(subnode);
   if (!str.has_value())
-    return kCallNoReturnStringError;
+    return JSON_CALL_NO_RETURN_STRING_ERROR;
   SetString(out, str.value(), out_size);
-  return kCallNoError;
+  return JSON_CALL_NO_ERROR;
 }
 
-call_result_t script::JSON_GetObject(node_ptr_t node_id, const std::string key, node_ptr_t *out) {
-  ASSERT_NODE_EXISTS(node_id);
-  if (!node_id->contains(key)) {
+call_result_t script::JSON_GetObject(node_ptr_t node, const std::string key, node_ptr_t *out) {
+  ASSERT_NODE_EXISTS(node);
+  if (!node->contains(key)) {
     PLUGIN_LOG("Node does not have item by key '%s'", key.c_str());
-    return kCallNodeNotExistsError;
+    return JSON_CALL_NODE_NOT_EXISTS_ERROR;
   }
 //  TODO: This check seems to be useless?
-//  if (!(*node_id)[key].is_object()) {
+//  if (!(*node)[key].is_object()) {
 //    PLUGIN_LOG("Array item '%s' type does not equal to required one", key.c_str());
-//    return kCallWrongTypeError;
+//    return JSON_CALL_WRONG_TYPE_ERROR;
 //  }
-  *out = reinterpret_cast<node_ptr_t>(new nlohmann::json((*node_id)[key]));
-  return kCallNoError;
+  *out = reinterpret_cast<node_ptr_t>(new nlohmann::json((*node)[key]));
+  return JSON_CALL_NO_ERROR;
 }
 
-call_result_t script::JSON_GetArray(node_ptr_t node_id, const std::string key, node_ptr_t *out) {
-  ASSERT_NODE_EXISTS(node_id);
-  if (!node_id->contains(key)) {
+call_result_t script::JSON_GetArray(node_ptr_t node, const std::string key, node_ptr_t *out) {
+  ASSERT_NODE_EXISTS(node);
+  if (!node->contains(key)) {
     PLUGIN_LOG("Node does not have item by key '%s'", key.c_str());
-    return kCallNodeNotExistsError;
+    return JSON_CALL_NODE_NOT_EXISTS_ERROR;
   }
-  if (!(*node_id)[key].is_array()) {
+  auto &subnode = (*node)[key];
+  if (!subnode.is_array()) {
     PLUGIN_LOG("Array item '%s' type does not equal to required one", key.c_str());
-    return kCallWrongTypeError;
+    return JSON_CALL_WRONG_TYPE_ERROR;
   }
-  *out = reinterpret_cast<node_ptr_t>(new nlohmann::json((*node_id)[key]));
-  return kCallNoError;
+  *out = reinterpret_cast<node_ptr_t>(new nlohmann::json(subnode));
+  return JSON_CALL_NO_ERROR;
 }
 
-node_type_t script::JSON_GetType(node_ptr_t node_id, const std::string key) {
-  ASSERT_NODE_EXISTS(node_id);
-  if (!node_id->contains(key)) {
+node_type_t script::JSON_GetType(node_ptr_t node, const std::string key) {
+  ASSERT_NODE_EXISTS(node);
+  if (!node->contains(key)) {
     PLUGIN_LOG("Node does not have item by key '%s'", key.c_str());
-    return kCallNodeNotExistsError;
+    return JSON_CALL_NODE_NOT_EXISTS_ERROR;
   }
-  return JSON_NodeType(reinterpret_cast<node_ptr_t>(&((*node_id)[key])));
+  return JSON_NodeType(reinterpret_cast<node_ptr_t>(&((*node)[key])));
 }
 
-call_result_t script::JSON_ArrayLength(node_ptr_t node_id, cell *out) {
-  ASSERT_NODE_EXISTS(node_id);
-  if (!node_id->is_array()) {
+call_result_t script::JSON_ArrayLength(node_ptr_t node, cell *out) {
+  ASSERT_NODE_EXISTS(node);
+  if (!node->is_array()) {
     PLUGIN_LOG("Node type does not equal to required one");
-    return kCallWrongTypeError;
+    return JSON_CALL_WRONG_TYPE_ERROR;
   }
-  *out = node_id->size();
-  return kCallNoError;
+  *out = node->size();
+  return JSON_CALL_NO_ERROR;
 }
 
 /**
@@ -331,46 +335,46 @@ call_result_t script::JSON_ArrayLength(node_ptr_t node_id, cell *out) {
  * 2. Allocate JsonNode from nlohmann::json and push ptr to out
  * It may be useful together with JSON_NodeType, JSON_GetNode* to pick value from native JsonNode
  */
-call_result_t script::JSON_ArrayObject(node_ptr_t node_id, cell index, node_ptr_t *out) {
-  ASSERT_NODE_EXISTS(node_id);
-  if (!node_id->is_array()) {
+call_result_t script::JSON_ArrayObject(node_ptr_t node, cell index, node_ptr_t *out) {
+  ASSERT_NODE_EXISTS(node);
+  if (!node->is_array()) {
     PLUGIN_LOG("Node type does not equal to required one");
-    return kCallWrongTypeError;
+    return JSON_CALL_WRONG_TYPE_ERROR;
   }
-  if (node_id->size() < index) {
-    return kCallNodeNotExistsError;
+  if (node->size() < index) {
+    return JSON_CALL_NODE_NOT_EXISTS_ERROR;
   }
-  *out = reinterpret_cast<node_ptr_t>(new nlohmann::json((*node_id)[index]));
-  return kCallNoError;
+  *out = reinterpret_cast<node_ptr_t>(new nlohmann::json((*node)[index]));
+  return JSON_CALL_NO_ERROR;
 }
 
-call_result_t script::JSON_ArrayAppend(node_ptr_t node_id, const std::string key, node_ptr_t value_node) {
-  ASSERT_NODE_EXISTS(node_id);
+call_result_t script::JSON_ArrayAppend(node_ptr_t node, const std::string key, node_ptr_t value_node) {
+  ASSERT_NODE_EXISTS(node);
   ASSERT_NODE_EXISTS(value_node);
-  if (!node_id->is_object()) {
+  if (!node->is_object()) {
     PLUGIN_LOG("Node type does not equal to required one");
-    return kCallWrongTypeError;
+    return JSON_CALL_WRONG_TYPE_ERROR;
   }
-  auto &subnode = (*node_id)[key];
+  auto &subnode = (*node)[key];
   if (!subnode.is_array()) {
     PLUGIN_LOG("Subnode type does not equal to required one");
-    return kCallWrongTypeError;
+    return JSON_CALL_WRONG_TYPE_ERROR;
   }
   subnode.emplace_back(*value_node);
-  return kCallNoError;
+  return JSON_CALL_NO_ERROR;
 }
 
-call_result_t script::JSON_ArrayRemove(node_ptr_t node_id, const std::string key, node_ptr_t value_node) {
-  ASSERT_NODE_EXISTS(node_id);
+call_result_t script::JSON_ArrayRemove(node_ptr_t node, const std::string key, node_ptr_t value_node) {
+  ASSERT_NODE_EXISTS(node);
   ASSERT_NODE_EXISTS(value_node);
-  if (!node_id->is_object()) {
+  if (!node->is_object()) {
     PLUGIN_LOG("Node type does not equal to required one");
-    return kCallWrongTypeError;
+    return JSON_CALL_WRONG_TYPE_ERROR;
   }
-  auto &subnode = (*node_id)[key];
+  auto &subnode = (*node)[key];
   if (!subnode.is_array()) {
     PLUGIN_LOG("Subnode type does not equal to required one");
-    return kCallWrongTypeError;
+    return JSON_CALL_WRONG_TYPE_ERROR;
   }
   for (auto ptr = subnode.cbegin(); ptr != subnode.end();) {
     if (*ptr == *value_node) {
@@ -379,97 +383,111 @@ call_result_t script::JSON_ArrayRemove(node_ptr_t node_id, const std::string key
       ++ptr;
     }
   }
-  return kCallNoError;
+  return JSON_CALL_NO_ERROR;
 }
 
-call_result_t script::JSON_ArrayRemoveIndex(node_ptr_t node_id, const std::string key, cell index) {
-  ASSERT_NODE_EXISTS(node_id);
+call_result_t script::JSON_ArrayRemoveIndex(node_ptr_t node, const std::string key, cell index) {
+  ASSERT_NODE_EXISTS(node);
   try {
-    if (!node_id->contains(key)) {
+    if (!node->is_object()) {
+      PLUGIN_LOG("Node type does not equal to required one");
+      return JSON_CALL_WRONG_TYPE_ERROR;
+    }
+    if (!node->contains(key)) {
       PLUGIN_LOG("Node does not have item by key '%s'", key.c_str());
-      return kCallNodeNotExistsError;
+      return JSON_CALL_NODE_NOT_EXISTS_ERROR;
     }
-    auto &arr = (*node_id)[key];
-    if (arr.size() < index) {
+    auto &subnode = (*node)[key];
+    if (!subnode.is_array()) {
+      PLUGIN_LOG("Subnode type does not equal to required one");
+      return JSON_CALL_WRONG_TYPE_ERROR;
+    }
+    if (subnode.size() < index) {
       PLUGIN_LOG("Node does not have item by index %d", index);
-      return kCallNodeNotExistsError;
+      return JSON_CALL_NODE_NOT_EXISTS_ERROR;
     }
-    arr.erase(index);
-    return kCallNoError;
+    subnode.erase(index);
+    return JSON_CALL_NO_ERROR;
   }
   catch (const std::exception &e) {
-    return kCallUnknownError;
+    return JSON_CALL_UNKNOWN_ERROR;
   }
 }
 
-call_result_t script::JSON_ArrayClear(node_ptr_t node_id, const std::string key) {
-  ASSERT_NODE_EXISTS(node_id);
-  if (!node_id->contains(key)) {
-    PLUGIN_LOG("Node does not have item by key '%s'", key.c_str());
-    return kCallNodeNotExistsError;
+call_result_t script::JSON_ArrayClear(node_ptr_t node, const std::string key) {
+  ASSERT_NODE_EXISTS(node);
+  if (!node->is_object()) {
+    PLUGIN_LOG("Node type does not equal to required one");
+    return JSON_CALL_WRONG_TYPE_ERROR;
   }
-  auto &subnode = (*node_id)[key];
+  if (!node->contains(key)) {
+    PLUGIN_LOG("Node does not have item by key '%s'", key.c_str());
+    return JSON_CALL_NODE_NOT_EXISTS_ERROR;
+  }
+  auto &subnode = (*node)[key];
 //  TODO: Original plugin has check to node[key] type, should it be there?
 //  if (!subnode.is_array()) {
 //    PLUGIN_LOG("Subnode type does not equal to required one");
-//    return kCallWrongTypeError;
+//    return JSON_CALL_WRONG_TYPE_ERROR;
 //  }
   subnode.clear();
-  return kCallNoError;
+  return JSON_CALL_NO_ERROR;
 }
 
-call_result_t script::JSON_Remove(node_ptr_t node_id, const std::string key) {
-  ASSERT_NODE_EXISTS(node_id);
-  if (!node_id->is_object()) {
+call_result_t script::JSON_Remove(node_ptr_t node, const std::string key) {
+  ASSERT_NODE_EXISTS(node);
+  if (!node->is_object()) {
     PLUGIN_LOG("Node type does not equal to required one");
-    return kCallWrongTypeError;
+    return JSON_CALL_WRONG_TYPE_ERROR;
   }
-  node_id->erase(key);
-  return kCallNoError;
+  node->erase(key);
+  return JSON_CALL_NO_ERROR;
 }
 
-call_result_t script::JSON_GetNodeBool(node_ptr_t node_id, bool *out) {
-  ASSERT_NODE_EXISTS(node_id);
-  if (!node_id->is_boolean()) {
+call_result_t script::JSON_GetNodeBool(node_ptr_t node, bool *out) {
+  ASSERT_NODE_EXISTS(node);
+  if (!node->is_boolean()) {
     PLUGIN_LOG("Node type does not equal to required one");
-    return kCallWrongTypeError;
+    return JSON_CALL_WRONG_TYPE_ERROR;
   }
-  *out = *node_id;
-  return kCallNoError;
+  *out = *node;
+  return JSON_CALL_NO_ERROR;
 }
 
-call_result_t script::JSON_GetNodeInt(node_ptr_t node_id, cell *out) {
-  ASSERT_NODE_EXISTS(node_id);
-  if (!node_id->is_number_integer()) {
+call_result_t script::JSON_GetNodeInt(node_ptr_t node, cell *out) {
+  ASSERT_NODE_EXISTS(node);
+  if (!node->is_number_integer()) {
     PLUGIN_LOG("Node type does not equal to required one");
-    return kCallWrongTypeError;
+    return JSON_CALL_WRONG_TYPE_ERROR;
   }
-  *out = *node_id;
-  return kCallNoError;
+  *out = *node;
+  return JSON_CALL_NO_ERROR;
 }
 
-call_result_t script::JSON_GetNodeFloat(node_ptr_t node_id, float *out) {
-  ASSERT_NODE_EXISTS(node_id);
-  if (!node_id->is_number_float()) {
+call_result_t script::JSON_GetNodeFloat(node_ptr_t node, float *out) {
+  ASSERT_NODE_EXISTS(node);
+  if (!node->is_number_float()) {
     PLUGIN_LOG("Node type does not equal to required one");
-    return kCallWrongTypeError;
+    return JSON_CALL_WRONG_TYPE_ERROR;
   }
-  *out = *node_id;
-  return kCallNoError;
+  *out = *node;
+  return JSON_CALL_NO_ERROR;
 }
 
-call_result_t script::JSON_GetNodeString(node_ptr_t node_id, cell *out, cell out_size) {
-  ASSERT_NODE_EXISTS(node_id);
-  if (!node_id->is_string()) {
+call_result_t script::JSON_GetNodeString(node_ptr_t node, cell *out, cell out_size) {
+  ASSERT_NODE_EXISTS(node);
+  if (!node->is_string()) {
     PLUGIN_LOG("Node type does not equal to required one");
-    return kCallWrongTypeError;
+    return JSON_CALL_WRONG_TYPE_ERROR;
   }
-  SetString(out, *node_id, out_size);
-  return kCallNoError;
+  SetString(out, *node, out_size);
+  return JSON_CALL_NO_ERROR;
 }
 
-call_result_t script::JSON_Cleanup(node_ptr_t node_id) {
-  ASSERT_NODE_EXISTS(node_id);
-  delete node_id;
-  return kCallNoError;
+call_result_t script::JSON_Cleanup(node_ptr_t node) {
+  // Silently return because node may be not initialized
+  if (node == nullptr)
+    return JSON_CALL_NODE_NOT_EXISTS_ERROR;
+  delete node;
+  return JSON_CALL_NO_ERROR;
 }

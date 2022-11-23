@@ -90,5 +90,5 @@ const char *plugin::Name() {
 }
 
 int plugin::Version() {
-  return PACK_PLUGIN_VERSION(0, 1, 0);
+  return JSON_VERSION;
 }

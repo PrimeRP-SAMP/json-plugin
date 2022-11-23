@@ -36,7 +36,7 @@ struct native_param : script::NativeParam {
   operator node_ptr_t() { return reinterpret_cast<node_ptr_t>(raw_value); }
 
   operator node_ptr_t*() {
-    if (raw_value == kInvalidNodeId)
+    if (raw_value == JSON_INVALID_NODE)
       return nullptr;
     return reinterpret_cast<node_ptr_t*>(script.GetPhysAddr(raw_value));
   }
