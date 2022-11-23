@@ -274,9 +274,25 @@ public:
    *            JSON_CALL_NODE_NOT_EXISTS_ERROR if node was not provided or there is no node by provided index
    */
   call_result_t       JSON_ArrayObject(node_ptr_t node, cell index, node_ptr_t *out);
-  /** TODO: Complete */
+  /**
+   * @brief Iterates an array and pushes next item index and current item into out
+   * @param node An array to iterate
+   * @param index Index of next item
+   * @param out Output JsonNode
+   * @return    JSON_CALL_NO_ERROR on success
+   *            JSON_CALL_WRONG_TYPE_ERROR if parent node is not an array
+   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if there is no any item within array anymore
+   */
   call_result_t       JSON_ArrayIterate(node_ptr_t node, cell *index, node_ptr_t *out);
-  /** TODO: Complete */
+  /**
+   * @brief Appends any given JsonNode to an existing JsonNode array
+   * @param node Parent array to add to (object)
+   * @param key Key of subnode to add in (array)
+   * @param value_node Node to add
+   * @return    JSON_CALL_NO_ERROR on success
+   *            JSON_CALL_WRONG_TYPE_ERROR if parent node is not an object or subnode is not an array
+   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if there is no any item within array anymore
+   */
   call_result_t       JSON_ArrayAppend(node_ptr_t node, const std::string key, node_ptr_t value_node);
   /**
    * @brief Removes item(s) from array within parent node if they equal to value_node

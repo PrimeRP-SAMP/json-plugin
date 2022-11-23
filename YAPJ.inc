@@ -70,6 +70,7 @@
     native JsonNode:JSON_Array(JsonNode:...);
 
     native JsonNode:JSON_Append(const JsonNode:first_node, const JsonNode:second_node);
+    native JsonNode:operator+(JsonNode:first_node, JsonNode:second_node) = JSON_Append;
 
     native JsonCallResult:JSON_SetNull(JsonNode:node, const key[]);
     native JsonCallResult:JSON_SetBool(JsonNode:node, const key[], const bool:value);
@@ -90,7 +91,7 @@
 
     native JsonCallResult:JSON_ArrayLength(const JsonNode:node, &length);
     native JsonCallResult:JSON_ArrayObject(const JsonNode:node, index, &JsonNode:output);
-    //native JsonCallResult:JSON_ArrayIterate(JsonNode:node, &length);
+    native JsonCallResult:JSON_ArrayIterate(const JsonNode:node, &index, &JsonNode:output);
     native JsonCallResult:JSON_ArrayAppend(JsonNode:node, const key[], const JsonNode:input);
     native JsonCallResult:JSON_ArrayRemove(JsonNode:node, const key[], const JsonNode:input);
     native JsonCallResult:JSON_ArrayRemoveIndex(JsonNode:node, const key[], const index);
@@ -113,4 +114,4 @@
   #else
     #define JSON_INVALID_NODE 0
   #endif // !defined __cplusplus
-#endif // PAWNRAKNET_INC_
+#endif // JSON_INC_
