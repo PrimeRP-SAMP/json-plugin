@@ -79,7 +79,22 @@ bool plugin::OnLoad() {
   REGISTER_NATIVE(JSON_Cleanup);
   //REGISTER_NATIVE(JSON_CountNodes);
 
-  Log("Plugin is loaded");
+  Log("\n\n"
+      "    | %s %s | 2022 - %s"
+      "\n"
+      "    | Inspired by: https://github.com/Southclaws/pawn-json"
+      "\n"
+      "    |--------------------------------"
+      "\n"
+      "    | Author and maintainer: #Northn"
+      "\n\n\n"
+      "    | Compiled: %s at %s"
+      "\n"
+      "    |--------------------------------------------------------------"
+      "\n"
+      "    | Repository: https://github.com/PrimeRP-SAMP/json-plugin"
+      "\n",
+      Name(), VersionAsString().c_str(), &__DATE__[7], __DATE__, __TIME__);
 
   return true;
 }
