@@ -36,4 +36,4 @@ typedef cell node_ptr_result_t;
 typedef cell call_result_t;
 typedef cell node_type_t;
 
-#include "YAPJ.inc"
+#include "../YAPJ.inc"
