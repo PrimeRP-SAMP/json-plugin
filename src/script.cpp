@@ -64,7 +64,6 @@ call_result_t script::JSON_SaveFile(const std::filesystem::path filename, const 
       }
     }
     std::ofstream o(filename, std::ofstream::out | std::ofstream::trunc);
-    o.clear();
     o << node->dump(indent) << std::endl;
     return JSON_CALL_NO_ERR;
   } catch (const std::exception &e) {
