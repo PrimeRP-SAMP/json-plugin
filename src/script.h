@@ -31,19 +31,19 @@ public:
    * @brief Parses JSON buffer
    * @param buffer Buffer to parse
    * @param node Output node
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_PARSER_ERROR on parser error
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if no output node was provided
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_PARSER_ERR on parser error
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if no output node was provided
    */
   call_result_t       JSON_Parse(const std::string buffer, node_ptr_t *node);
   /**
    * @brief Parses JSON file
    * @param filename Name of file to parse
    * @param node Output node
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_PARSER_ERROR on parser error
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if no output node was provided
-   *            JSON_CALL_NO_SUCH_FILE_ERROR if file not exists
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_PARSER_ERR on parser error
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if no output node was provided
+   *            JSON_CALL_NO_SUCH_FILE_ERR if file not exists
    */
   call_result_t       JSON_ParseFile(const std::filesystem::path filename, node_ptr_t *node);
   /**
@@ -51,10 +51,10 @@ public:
    * @param filename Name of file to save in
    * @param node Node to save
    * @param indent Count of spaces for tabulation. Default: -1
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_UNKNOWN_ERROR on any exception
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if no node was provided
-   *            JSON_CALL_NO_SUCH_DIRECTORY_ERROR if output path (not a file) does not exist
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_UNKNOWN_ERR on any exception
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if no node was provided
+   *            JSON_CALL_NO_SUCH_DIR_ERR if output path (not a file) does not exist
    */
   call_result_t       JSON_SaveFile(const std::filesystem::path filename, const node_ptr_t node, const cell indent);
   /**
@@ -63,16 +63,16 @@ public:
    * @param out Output buffer
    * @param out_size Output buffer size
    * @param indent Count of spaces for tabulation. Default: -1
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_PARSER_ERROR on parser error
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if no output node was provided
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_PARSER_ERR on parser error
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if no output node was provided
    */
   call_result_t       JSON_Stringify(const node_ptr_t node, cell *out, const cell out_size, const cell indent);
   /**
    * @brief Returns node type
    * @param node Node to check type of
    * @return    JsonNodeType on success
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if node was not provided
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if node was not provided
    */
   node_type_t         JSON_NodeType(const node_ptr_t node);
 
@@ -132,8 +132,8 @@ public:
    * @brief Sets null to JsonNode[key]
    * @param node Parent node
    * @param key Key of JsonNode in object
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if no node was provided
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if no node was provided
    */
   call_result_t       JSON_SetNull(node_ptr_t node, const std::string key);
   /**
@@ -141,8 +141,8 @@ public:
    * @param node Parent node
    * @param key Key of JsonNode in object
    * @param value Value to set
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if no node was provided
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if no node was provided
    */
   call_result_t       JSON_SetBool(node_ptr_t node, const std::string key, const bool value);
   /**
@@ -150,8 +150,8 @@ public:
    * @param node Parent node
    * @param key Key of JsonNode in object
    * @param value Value to set
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if no node was provided
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if no node was provided
    */
   call_result_t       JSON_SetInt(node_ptr_t node, const std::string key, const cell value);
   /**
@@ -159,8 +159,8 @@ public:
    * @param node Parent node
    * @param key Key of JsonNode in object
    * @param value Value to set
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if no node was provided
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if no node was provided
    */
   call_result_t       JSON_SetFloat(node_ptr_t node, const std::string key, const float value);
   /**
@@ -168,8 +168,8 @@ public:
    * @param node Parent node
    * @param key Key of JsonNode in object
    * @param value Value to set
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if no node was provided
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if no node was provided
    */
   call_result_t       JSON_SetString(node_ptr_t node, const std::string key, const std::string value);
   /**
@@ -177,8 +177,8 @@ public:
    * @param node Parent node
    * @param key Key of JsonNode in object
    * @param value_node Node to set
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if first/second node was not provided
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if first/second node was not provided
    */
   call_result_t       JSON_SetObject(node_ptr_t node, const std::string key, const node_ptr_t value_node);
   /**
@@ -186,8 +186,8 @@ public:
    * @param node Parent node
    * @param key Key of JsonNode in object
    * @param value_node Node to set
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if first/second node was not provided
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if first/second node was not provided
    */
   call_result_t       JSON_SetArray(node_ptr_t node, const std::string key, const node_ptr_t value_node);
 
@@ -196,8 +196,8 @@ public:
    * @param node Parent node
    * @param key Key of JsonNode in object
    * @param out Output value
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if node was not provided or there is no node by provided key
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if node was not provided or there is no node by provided key
    */
   call_result_t       JSON_GetBool(node_ptr_t node, const std::string key, bool *out);
   /**
@@ -205,8 +205,8 @@ public:
    * @param node Parent node
    * @param key Key of JsonNode in object
    * @param out Output value
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if node was not provided or there is no node by provided key
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if node was not provided or there is no node by provided key
    */
   call_result_t       JSON_GetInt(node_ptr_t node, const std::string key, cell *out);
   /**
@@ -214,8 +214,8 @@ public:
    * @param node Parent node
    * @param key Key of JsonNode in object
    * @param out Output value
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if node was not provided or there is no node by provided key
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if node was not provided or there is no node by provided key
    */
   call_result_t       JSON_GetFloat(node_ptr_t node, const std::string key, float *out);
   /**
@@ -224,8 +224,8 @@ public:
    * @param key Key of JsonNode in object
    * @param out Output buffer
    * @param out_size Output buffer size
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if node was not provided or there is no node by provided key
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if node was not provided or there is no node by provided key
    */
   call_result_t       JSON_GetString(node_ptr_t node, const std::string key, cell *out, cell out_size);
   /**
@@ -233,8 +233,8 @@ public:
    * @param node Parent node
    * @param key Key of JsonNode in object
    * @param out Output value
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if node was not provided or there is no node by provided key
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if node was not provided or there is no node by provided key
    */
   call_result_t       JSON_GetObject(node_ptr_t node, const std::string key, node_ptr_t *out);
   /**
@@ -242,8 +242,8 @@ public:
    * @param node Parent node
    * @param key Key of JsonNode in object
    * @param out Output value
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if node was not provided or there is no node by provided key
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if node was not provided or there is no node by provided key
    */
   call_result_t       JSON_GetArray(node_ptr_t node, const std::string key, node_ptr_t *out);
 
@@ -252,7 +252,7 @@ public:
    * @param node Parent node
    * @param key Key of JsonNode in object
    * @return    JsonNodeType on success
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if node was not provided or there is no node by provided key
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if node was not provided or there is no node by provided key
    */
   node_type_t         JSON_GetType(node_ptr_t node, const std::string key);
 
@@ -260,8 +260,8 @@ public:
    * @brief Gets size of JsonNode
    * @param node Node to get size of
    * @param out Output value
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if node was not provided or there is no node by provided key
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if node was not provided or there is no node by provided key
    */
   call_result_t       JSON_ArrayLength(node_ptr_t node, cell *out);
   /**
@@ -269,9 +269,9 @@ public:
    * @param node Parent node
    * @param index Index of item within array
    * @param out Output JsonNode
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_WRONG_TYPE_ERROR if parent node is not an array
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if node was not provided or there is no node by provided index
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_WRONG_TYPE_ERR if parent node is not an array
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if node was not provided or there is no node by provided index
    */
   call_result_t       JSON_ArrayObject(node_ptr_t node, cell index, node_ptr_t *out);
   /**
@@ -279,9 +279,9 @@ public:
    * @param node An array to iterate
    * @param index Index of next item
    * @param out Output JsonNode
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_WRONG_TYPE_ERROR if parent node is not an array
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if there is no any item within array anymore
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_WRONG_TYPE_ERR if parent node is not an array
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if there is no any item within array anymore
    */
   call_result_t       JSON_ArrayIterate(node_ptr_t node, cell *index, node_ptr_t *out);
   /**
@@ -289,9 +289,9 @@ public:
    * @param node Parent array to add to (object)
    * @param key Key of subnode to add in (array)
    * @param value_node Node to add
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_WRONG_TYPE_ERROR if parent node is not an object or subnode is not an array
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if there is no any item within array anymore
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_WRONG_TYPE_ERR if parent node is not an object or subnode is not an array
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if there is no any item within array anymore
    */
   call_result_t       JSON_ArrayAppend(node_ptr_t node, const std::string key, node_ptr_t value_node);
   /**
@@ -299,9 +299,9 @@ public:
    * @param node Parent node (object)
    * @param key Key of array within parent object
    * @param value_node Similar node to compare by
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_WRONG_TYPE_ERROR if parent node or subnode is not an array
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if node was not provided or there is no node by provided key
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_WRONG_TYPE_ERR if parent node or subnode is not an array
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if node was not provided or there is no node by provided key
    */
   call_result_t       JSON_ArrayRemove(node_ptr_t node, const std::string key, node_ptr_t value_node);
   /**
@@ -309,19 +309,19 @@ public:
    * @param node Parent node (object)
    * @param key Key of array within parent object
    * @param index Index of item within array
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_WRONG_TYPE_ERROR if parent node or subnode is not an array
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if node was not provided or there is no node by provided key/index
-   *            JSON_CALL_UNKNOWN_ERROR on any unhandled exception
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_WRONG_TYPE_ERR if parent node or subnode is not an array
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if node was not provided or there is no node by provided key/index
+   *            JSON_CALL_UNKNOWN_ERR on any unhandled exception
    */
   call_result_t       JSON_ArrayRemoveIndex(node_ptr_t node, const std::string key, cell index);
   /**
    * @brief Clears an array within parent object by specified key
    * @param node Parent node (object)
    * @param key Key of array within parent object
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_WRONG_TYPE_ERROR if parent node or subnode is not an array
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if node was not provided or there is no node by provided key/index
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_WRONG_TYPE_ERR if parent node or subnode is not an array
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if node was not provided or there is no node by provided key/index
    */
   call_result_t       JSON_ArrayClear(node_ptr_t node, const std::string key);
   call_result_t       JSON_Keys(node_ptr_t node, cell index, char *out, cell out_size);
@@ -329,9 +329,9 @@ public:
    * @brief Removes an item from object by specified key
    * @param node Parent node (object)
    * @param key Key of item within object
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_WRONG_TYPE_ERROR if parent node or subnode is not an array
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if node was not provided or there is no node by provided key/index
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_WRONG_TYPE_ERR if parent node or subnode is not an array
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if node was not provided or there is no node by provided key/index
    */
   call_result_t       JSON_Remove(node_ptr_t node, const std::string key);
 
@@ -339,27 +339,27 @@ public:
    * @brief Gets a boolean value of native JsonNode
    * @param node Node
    * @param out Output value
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_WRONG_TYPE_ERROR if parent node or subnode is not an array
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if node was not provided
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_WRONG_TYPE_ERR if parent node or subnode is not an array
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if node was not provided
    */
   call_result_t       JSON_GetNodeBool(node_ptr_t node, bool *out);
   /**
    * @brief Gets a integer value of native JsonNode
    * @param node Node
    * @param out Output value
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_WRONG_TYPE_ERROR if parent node or subnode is not an array
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if node was not provided
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_WRONG_TYPE_ERR if parent node or subnode is not an array
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if node was not provided
    */
   call_result_t       JSON_GetNodeInt(node_ptr_t node, cell *out);
   /**
    * @brief Gets a float value of native JsonNode
    * @param node Node
    * @param out Output value
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_WRONG_TYPE_ERROR if parent node or subnode is not an array
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if node was not provided
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_WRONG_TYPE_ERR if parent node or subnode is not an array
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if node was not provided
    */
   call_result_t       JSON_GetNodeFloat(node_ptr_t node, float *out);
   /**
@@ -367,17 +367,17 @@ public:
    * @param node Node
    * @param out Output buffer
    * @param out_size Size of output buffer
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_WRONG_TYPE_ERROR if parent node or subnode is not an array
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if node was not provided
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_WRONG_TYPE_ERR if parent node or subnode is not an array
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if node was not provided
    */
   call_result_t       JSON_GetNodeString(node_ptr_t node, cell *out, cell out_size);
 
   /**
    * @brief ONLY FOR INTERNAL USAGE! Destroys allocated JsonNode.
    * @param node Node
-   * @return    JSON_CALL_NO_ERROR on success
-   *            JSON_CALL_NODE_NOT_EXISTS_ERROR if node was not provided
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if node was not provided
    */
   call_result_t       JSON_Cleanup(node_ptr_t node);
 };

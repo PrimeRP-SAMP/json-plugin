@@ -24,16 +24,16 @@
 
 #define PLUGIN_LOG(text, ...) Log("%s: %d: unknown error: " text, __FUNCTION__, __LINE__ __VA_OPT__(,) __VA_ARGS__)
 #define LOG_EXCEPTION(exc) Log("%s: %d: unknown exception: %s", __FUNCTION__, __LINE__, (exc).what())
-#define ASSERT_NODE_EXISTS(x) if ((x) == nullptr) { Log("%s: %d: error: node not exists", __FUNCTION__, __LINE__); return JSON_CALL_NODE_NOT_EXISTS_ERROR; }
+#define ASSERT_NODE_EXISTS(x) if ((x) == nullptr) { Log("%s: %d: error: node not exists", __FUNCTION__, __LINE__); return JSON_CALL_NODE_NOT_EXISTS_ERR; }
 
 call_result_t script::JSON_Parse(const std::string buffer, node_ptr_t *node) {
   ASSERT_NODE_EXISTS(node);
   try {
     *node = new nlohmann::json(nlohmann::json::parse(buffer));
-    return JSON_CALL_NO_ERROR;
+    return JSON_CALL_NO_ERR;
   } catch (const std::exception &e) {
     LOG_EXCEPTION(e);
-    return JSON_CALL_PARSER_ERROR;
+    return JSON_CALL_PARSER_ERR;
   }
 }
 
@@ -41,14 +41,14 @@ call_result_t script::JSON_ParseFile(const std::filesystem::path filename, node_
   ASSERT_NODE_EXISTS(node);
   try {
     if (!exists(filename) || !is_regular_file(filename)) {
-      return JSON_CALL_NO_SUCH_FILE_ERROR;
+      return JSON_CALL_NO_SUCH_FILE_ERR;
     }
     std::ifstream f(filename);
     *node = new nlohmann::json(nlohmann::json::parse(f));
-    return JSON_CALL_NO_ERROR;
+    return JSON_CALL_NO_ERR;
   } catch (const std::exception &e) {
     LOG_EXCEPTION(e);
-    return JSON_CALL_PARSER_ERROR;
+    return JSON_CALL_PARSER_ERR;
   }
 }
 
@@ -60,16 +60,16 @@ call_result_t script::JSON_SaveFile(const std::filesystem::path filename, const 
       if (!exists(parent_path)) {
         create_directories(filename.parent_path());
       } else if (!is_directory(filename.parent_path())) {
-        return JSON_CALL_NO_SUCH_DIRECTORY_ERROR;
+        return JSON_CALL_NO_SUCH_DIR_ERR;
       }
     }
     std::ofstream o(filename, std::ofstream::out | std::ofstream::trunc);
     o.clear();
     o << node->dump(indent) << std::endl;
-    return JSON_CALL_NO_ERROR;
+    return JSON_CALL_NO_ERR;
   } catch (const std::exception &e) {
     LOG_EXCEPTION(e);
-    return JSON_CALL_PARSER_ERROR;
+    return JSON_CALL_PARSER_ERR;
   }
 }
 
@@ -78,10 +78,10 @@ call_result_t script::JSON_Stringify(const node_ptr_t node, cell *out, const cel
   try {
     auto str = node->dump(indent);
     SetString(out, str, out_size);
-    return JSON_CALL_NO_ERROR;
+    return JSON_CALL_NO_ERR;
   } catch (const std::exception &e) {
     LOG_EXCEPTION(e);
-    return JSON_CALL_UNKNOWN_ERROR;
+    return JSON_CALL_UNKNOWN_ERR;
   }
 }
 
@@ -165,11 +165,11 @@ node_ptr_result_t script::JSON_Append(const node_ptr_t first_node, const node_pt
   ASSERT_NODE_EXISTS(second_node);
   if (!first_node->is_object() && !first_node->is_array()) {
     PLUGIN_LOG("First array type does not equal to required one");
-    return JSON_CALL_WRONG_TYPE_ERROR;
+    return JSON_CALL_WRONG_TYPE_ERR;
   }
   if (second_node->type() != first_node->type()) {
     PLUGIN_LOG("Second array type does not equal to first one");
-    return JSON_CALL_WRONG_TYPE_ERROR;
+    return JSON_CALL_WRONG_TYPE_ERR;
   }
   auto copy_first_node = new nlohmann::json(*first_node);
   if (copy_first_node->is_object()) {
@@ -184,7 +184,7 @@ template<typename T>
 call_result_t script::internal_JSON_SetValue(node_ptr_t node, const std::string key, const T value) {
   ASSERT_NODE_EXISTS(node);
   (*node)[key] = value;
-  return JSON_CALL_NO_ERROR;
+  return JSON_CALL_NO_ERR;
 }
 
 call_result_t script::JSON_SetNull(node_ptr_t node, const std::string key) {
@@ -221,100 +221,100 @@ call_result_t script::JSON_GetBool(node_ptr_t node, const std::string key, bool 
   ASSERT_NODE_EXISTS(node);
   if (!node->contains(key)) {
     PLUGIN_LOG("Node not exists");
-    return JSON_CALL_NODE_NOT_EXISTS_ERROR;
+    return JSON_CALL_NODE_NOT_EXISTS_ERR;
   }
   auto &subnode = (*node)[key];
   if (!subnode.is_boolean()) {
     PLUGIN_LOG("Array item '%s' type does not equal to required one", key.c_str());
-    return JSON_CALL_WRONG_TYPE_ERROR;
+    return JSON_CALL_WRONG_TYPE_ERR;
   }
   *out = subnode;
-  return JSON_CALL_NO_ERROR;
+  return JSON_CALL_NO_ERR;
 }
 
 call_result_t script::JSON_GetInt(node_ptr_t node, const std::string key, cell *out) {
   ASSERT_NODE_EXISTS(node);
   if (!node->contains(key)) {
     PLUGIN_LOG("Node does not have item by key '%s'", key.c_str());
-    return JSON_CALL_NODE_NOT_EXISTS_ERROR;
+    return JSON_CALL_NODE_NOT_EXISTS_ERR;
   }
   auto &subnode = (*node)[key];
   if (!subnode.is_number_integer()) {
     PLUGIN_LOG("Array item '%s' type does not equal to required one", key.c_str());
-    return JSON_CALL_WRONG_TYPE_ERROR;
+    return JSON_CALL_WRONG_TYPE_ERR;
   }
   *out = subnode;
-  return JSON_CALL_NO_ERROR;
+  return JSON_CALL_NO_ERR;
 }
 
 call_result_t script::JSON_GetFloat(node_ptr_t node, const std::string key, float *out) {
   ASSERT_NODE_EXISTS(node);
   if (!node->contains(key)) {
     PLUGIN_LOG("Node does not have item by key '%s'", key.c_str());
-    return JSON_CALL_NODE_NOT_EXISTS_ERROR;
+    return JSON_CALL_NODE_NOT_EXISTS_ERR;
   }
   auto &subnode = (*node)[key];
   if (!subnode.is_number_float()) {
     PLUGIN_LOG("Array item '%s' type does not equal to required one", key.c_str());
-    return JSON_CALL_WRONG_TYPE_ERROR;
+    return JSON_CALL_WRONG_TYPE_ERR;
   }
   *out = subnode;
-  return JSON_CALL_NO_ERROR;
+  return JSON_CALL_NO_ERR;
 }
 
 call_result_t script::JSON_GetString(node_ptr_t node, const std::string key, cell *out, cell out_size) {
   ASSERT_NODE_EXISTS(node);
   if (!node->contains(key)) {
     PLUGIN_LOG("Node does not have item by key '%s'", key.c_str());
-    return JSON_CALL_NODE_NOT_EXISTS_ERROR;
+    return JSON_CALL_NODE_NOT_EXISTS_ERR;
   }
   auto &subnode = (*node)[key];
   if (!subnode.is_string()) {
     PLUGIN_LOG("Array item '%s' type does not equal to required one", key.c_str());
-    return JSON_CALL_WRONG_TYPE_ERROR;
+    return JSON_CALL_WRONG_TYPE_ERR;
   }
   auto str = utf2cp(subnode);
   if (!str.has_value())
-    return JSON_CALL_NO_RETURN_STRING_ERROR;
+    return JSON_CALL_NO_RETURN_STRING_ERR;
   SetString(out, str.value(), out_size);
-  return JSON_CALL_NO_ERROR;
+  return JSON_CALL_NO_ERR;
 }
 
 call_result_t script::JSON_GetObject(node_ptr_t node, const std::string key, node_ptr_t *out) {
   ASSERT_NODE_EXISTS(node);
   if (!node->contains(key)) {
     PLUGIN_LOG("Node does not have item by key '%s'", key.c_str());
-    return JSON_CALL_NODE_NOT_EXISTS_ERROR;
+    return JSON_CALL_NODE_NOT_EXISTS_ERR;
   }
 //  TODO: This check seems to be useless?
 //  if (!(*node)[key].is_object()) {
 //    PLUGIN_LOG("Array item '%s' type does not equal to required one", key.c_str());
-//    return JSON_CALL_WRONG_TYPE_ERROR;
+//    return JSON_CALL_WRONG_TYPE_ERR;
 //  }
   *out = reinterpret_cast<node_ptr_t>(new nlohmann::json((*node)[key]));
-  return JSON_CALL_NO_ERROR;
+  return JSON_CALL_NO_ERR;
 }
 
 call_result_t script::JSON_GetArray(node_ptr_t node, const std::string key, node_ptr_t *out) {
   ASSERT_NODE_EXISTS(node);
   if (!node->contains(key)) {
     PLUGIN_LOG("Node does not have item by key '%s'", key.c_str());
-    return JSON_CALL_NODE_NOT_EXISTS_ERROR;
+    return JSON_CALL_NODE_NOT_EXISTS_ERR;
   }
   auto &subnode = (*node)[key];
   if (!subnode.is_array()) {
     PLUGIN_LOG("Array item '%s' type does not equal to required one", key.c_str());
-    return JSON_CALL_WRONG_TYPE_ERROR;
+    return JSON_CALL_WRONG_TYPE_ERR;
   }
   *out = reinterpret_cast<node_ptr_t>(new nlohmann::json(subnode));
-  return JSON_CALL_NO_ERROR;
+  return JSON_CALL_NO_ERR;
 }
 
 node_type_t script::JSON_GetType(node_ptr_t node, const std::string key) {
   ASSERT_NODE_EXISTS(node);
   if (!node->contains(key)) {
     PLUGIN_LOG("Node does not have item by key '%s'", key.c_str());
-    return JSON_CALL_NODE_NOT_EXISTS_ERROR;
+    return JSON_CALL_NODE_NOT_EXISTS_ERR;
   }
   return JSON_NodeType(reinterpret_cast<node_ptr_t>(&((*node)[key])));
 }
@@ -323,10 +323,10 @@ call_result_t script::JSON_ArrayLength(node_ptr_t node, cell *out) {
   ASSERT_NODE_EXISTS(node);
   if (!node->is_array()) {
     PLUGIN_LOG("Node type does not equal to required one");
-    return JSON_CALL_WRONG_TYPE_ERROR;
+    return JSON_CALL_WRONG_TYPE_ERR;
   }
   *out = node->size();
-  return JSON_CALL_NO_ERROR;
+  return JSON_CALL_NO_ERR;
 }
 
 /**
@@ -339,30 +339,30 @@ call_result_t script::JSON_ArrayObject(node_ptr_t node, cell index, node_ptr_t *
   ASSERT_NODE_EXISTS(node);
   if (!node->is_array()) {
     PLUGIN_LOG("Node type does not equal to required one");
-    return JSON_CALL_WRONG_TYPE_ERROR;
+    return JSON_CALL_WRONG_TYPE_ERR;
   }
   if (node->size() <= index) {
-    return JSON_CALL_NODE_NOT_EXISTS_ERROR;
+    return JSON_CALL_NODE_NOT_EXISTS_ERR;
   }
   *out = reinterpret_cast<node_ptr_t>(new nlohmann::json((*node)[index]));
-  return JSON_CALL_NO_ERROR;
+  return JSON_CALL_NO_ERR;
 }
 
 call_result_t script::JSON_ArrayIterate(node_ptr_t node, cell *index, node_ptr_t *out) {
   ASSERT_NODE_EXISTS(node);
   if (!node->is_array()) {
     PLUGIN_LOG("Node type does not equal to required one");
-    return JSON_CALL_WRONG_TYPE_ERROR;
+    return JSON_CALL_WRONG_TYPE_ERR;
   }
   if (node->size() <= *index) {
-    return JSON_CALL_NODE_NOT_EXISTS_ERROR;
+    return JSON_CALL_NODE_NOT_EXISTS_ERR;
   }
   // TODO: Does it have to be there? Maybe AMX handles such destructors by itself?
   if (*out != nullptr)
     delete (*out);
   *out = new nlohmann::json((*node)[*index]);
   *index += 1;
-  return JSON_CALL_NO_ERROR;
+  return JSON_CALL_NO_ERR;
 }
 
 call_result_t script::JSON_ArrayAppend(node_ptr_t node, const std::string key, node_ptr_t value_node) {
@@ -370,15 +370,15 @@ call_result_t script::JSON_ArrayAppend(node_ptr_t node, const std::string key, n
   ASSERT_NODE_EXISTS(value_node);
   if (!node->is_object()) {
     PLUGIN_LOG("Node type does not equal to required one");
-    return JSON_CALL_WRONG_TYPE_ERROR;
+    return JSON_CALL_WRONG_TYPE_ERR;
   }
   auto &subnode = (*node)[key];
   if (!subnode.is_array()) {
     PLUGIN_LOG("Subnode type does not equal to required one");
-    return JSON_CALL_WRONG_TYPE_ERROR;
+    return JSON_CALL_WRONG_TYPE_ERR;
   }
   subnode.emplace_back(*value_node);
-  return JSON_CALL_NO_ERROR;
+  return JSON_CALL_NO_ERR;
 }
 
 call_result_t script::JSON_ArrayRemove(node_ptr_t node, const std::string key, node_ptr_t value_node) {
@@ -386,12 +386,12 @@ call_result_t script::JSON_ArrayRemove(node_ptr_t node, const std::string key, n
   ASSERT_NODE_EXISTS(value_node);
   if (!node->is_object()) {
     PLUGIN_LOG("Node type does not equal to required one");
-    return JSON_CALL_WRONG_TYPE_ERROR;
+    return JSON_CALL_WRONG_TYPE_ERR;
   }
   auto &subnode = (*node)[key];
   if (!subnode.is_array()) {
     PLUGIN_LOG("Subnode type does not equal to required one");
-    return JSON_CALL_WRONG_TYPE_ERROR;
+    return JSON_CALL_WRONG_TYPE_ERR;
   }
   for (auto ptr = subnode.cbegin(); ptr != subnode.end();) {
     if (*ptr == *value_node) {
@@ -400,7 +400,7 @@ call_result_t script::JSON_ArrayRemove(node_ptr_t node, const std::string key, n
       ++ptr;
     }
   }
-  return JSON_CALL_NO_ERROR;
+  return JSON_CALL_NO_ERR;
 }
 
 call_result_t script::JSON_ArrayRemoveIndex(node_ptr_t node, const std::string key, cell index) {
@@ -408,26 +408,26 @@ call_result_t script::JSON_ArrayRemoveIndex(node_ptr_t node, const std::string k
   try {
     if (!node->is_object()) {
       PLUGIN_LOG("Node type does not equal to required one");
-      return JSON_CALL_WRONG_TYPE_ERROR;
+      return JSON_CALL_WRONG_TYPE_ERR;
     }
     if (!node->contains(key)) {
       PLUGIN_LOG("Node does not have item by key '%s'", key.c_str());
-      return JSON_CALL_NODE_NOT_EXISTS_ERROR;
+      return JSON_CALL_NODE_NOT_EXISTS_ERR;
     }
     auto &subnode = (*node)[key];
     if (!subnode.is_array()) {
       PLUGIN_LOG("Subnode type does not equal to required one");
-      return JSON_CALL_WRONG_TYPE_ERROR;
+      return JSON_CALL_WRONG_TYPE_ERR;
     }
     if (subnode.size() < index) {
       PLUGIN_LOG("Node does not have item by index %d", index);
-      return JSON_CALL_NODE_NOT_EXISTS_ERROR;
+      return JSON_CALL_NODE_NOT_EXISTS_ERR;
     }
     subnode.erase(index);
-    return JSON_CALL_NO_ERROR;
+    return JSON_CALL_NO_ERR;
   }
   catch (const std::exception &e) {
-    return JSON_CALL_UNKNOWN_ERROR;
+    return JSON_CALL_UNKNOWN_ERR;
   }
 }
 
@@ -435,76 +435,76 @@ call_result_t script::JSON_ArrayClear(node_ptr_t node, const std::string key) {
   ASSERT_NODE_EXISTS(node);
   if (!node->is_object()) {
     PLUGIN_LOG("Node type does not equal to required one");
-    return JSON_CALL_WRONG_TYPE_ERROR;
+    return JSON_CALL_WRONG_TYPE_ERR;
   }
   if (!node->contains(key)) {
     PLUGIN_LOG("Node does not have item by key '%s'", key.c_str());
-    return JSON_CALL_NODE_NOT_EXISTS_ERROR;
+    return JSON_CALL_NODE_NOT_EXISTS_ERR;
   }
   auto &subnode = (*node)[key];
 //  TODO: Original plugin has check to node[key] type, should it be there?
 //  if (!subnode.is_array()) {
 //    PLUGIN_LOG("Subnode type does not equal to required one");
-//    return JSON_CALL_WRONG_TYPE_ERROR;
+//    return JSON_CALL_WRONG_TYPE_ERR;
 //  }
   subnode.clear();
-  return JSON_CALL_NO_ERROR;
+  return JSON_CALL_NO_ERR;
 }
 
 call_result_t script::JSON_Remove(node_ptr_t node, const std::string key) {
   ASSERT_NODE_EXISTS(node);
   if (!node->is_object()) {
     PLUGIN_LOG("Node type does not equal to required one");
-    return JSON_CALL_WRONG_TYPE_ERROR;
+    return JSON_CALL_WRONG_TYPE_ERR;
   }
   node->erase(key);
-  return JSON_CALL_NO_ERROR;
+  return JSON_CALL_NO_ERR;
 }
 
 call_result_t script::JSON_GetNodeBool(node_ptr_t node, bool *out) {
   ASSERT_NODE_EXISTS(node);
   if (!node->is_boolean()) {
     PLUGIN_LOG("Node type does not equal to required one");
-    return JSON_CALL_WRONG_TYPE_ERROR;
+    return JSON_CALL_WRONG_TYPE_ERR;
   }
   *out = *node;
-  return JSON_CALL_NO_ERROR;
+  return JSON_CALL_NO_ERR;
 }
 
 call_result_t script::JSON_GetNodeInt(node_ptr_t node, cell *out) {
   ASSERT_NODE_EXISTS(node);
   if (!node->is_number_integer()) {
     PLUGIN_LOG("Node type does not equal to required one");
-    return JSON_CALL_WRONG_TYPE_ERROR;
+    return JSON_CALL_WRONG_TYPE_ERR;
   }
   *out = *node;
-  return JSON_CALL_NO_ERROR;
+  return JSON_CALL_NO_ERR;
 }
 
 call_result_t script::JSON_GetNodeFloat(node_ptr_t node, float *out) {
   ASSERT_NODE_EXISTS(node);
   if (!node->is_number_float()) {
     PLUGIN_LOG("Node type does not equal to required one");
-    return JSON_CALL_WRONG_TYPE_ERROR;
+    return JSON_CALL_WRONG_TYPE_ERR;
   }
   *out = *node;
-  return JSON_CALL_NO_ERROR;
+  return JSON_CALL_NO_ERR;
 }
 
 call_result_t script::JSON_GetNodeString(node_ptr_t node, cell *out, cell out_size) {
   ASSERT_NODE_EXISTS(node);
   if (!node->is_string()) {
     PLUGIN_LOG("Node type does not equal to required one");
-    return JSON_CALL_WRONG_TYPE_ERROR;
+    return JSON_CALL_WRONG_TYPE_ERR;
   }
   SetString(out, *node, out_size);
-  return JSON_CALL_NO_ERROR;
+  return JSON_CALL_NO_ERR;
 }
 
 call_result_t script::JSON_Cleanup(node_ptr_t node) {
   // Silently return because node may be not initialized
   if (node == nullptr)
-    return JSON_CALL_NODE_NOT_EXISTS_ERROR;
+    return JSON_CALL_NODE_NOT_EXISTS_ERR;
   delete node;
-  return JSON_CALL_NO_ERROR;
+  return JSON_CALL_NO_ERR;
 }
