@@ -273,7 +273,7 @@ call_result_t script::JSON_GetString(node_ptr_t node, const std::string key, cel
     PLUGIN_LOG("Array item '%s' type does not equal to required one", key.c_str());
     return JSON_CALL_WRONG_TYPE_ERR;
   }
-  auto str = utf2cp(subnode);
+  auto str = utf2cp(to_string(subnode));
   if (!str.has_value())
     return JSON_CALL_NO_RETURN_STRING_ERR;
   SetString(out, str.value(), out_size);
