@@ -82,18 +82,17 @@ bool plugin::OnLoad() {
   Log("\n\n"
       "    | %s %s | 2022 - %s"
       "\n"
-      "    | Inspired by: https://github.com/Southclaws/pawn-json"
-      "\n"
       "    |--------------------------------"
       "\n"
-      "    | Author and maintainer: #Northn"
+      "    | Author and maintainer: Northn <erolerol3760@gmail.com>"
       "\n\n\n"
       "    | Compiled: %s at %s"
       "\n"
       "    |--------------------------------------------------------------"
       "\n"
-      "    | Repository: https://github.com/PrimeRP-SAMP/json-plugin"
-      "\n",
+      "    | Inspired by: https://github.com/Southclaws/pawn-json"
+      "\n"
+      "    | Repository: https://github.com/PrimeRP-SAMP/json-plugin",
       Name(), VersionAsString().c_str(), &__DATE__[7], __DATE__, __TIME__);
 
   return true;
