@@ -28,15 +28,19 @@
     #define PACK_PLUGIN_VERSION(%0,%1,%2) (((%0) << 16) | ((%1) << 8) | (%2))
   #endif
 
-  #define JSON_VERSION PACK_PLUGIN_VERSION(1, 0, 0)
+  #define JSON_VERSION PACK_PLUGIN_VERSION(1, 1, 0)
 
   enum JsonNodeType {
     JSON_NODE_NULL = 64,
     JSON_NODE_BOOLEAN,
-    JSON_NODE_NUMBER,
+    JSON_NODE_INT,
+    JSON_NODE_NUMBER = JSON_NODE_INT,
+    JSON_NODE_FLOAT,
     JSON_NODE_STRING,
     JSON_NODE_OBJECT,
-    JSON_NODE_ARRAY
+    JSON_NODE_ARRAY,
+
+    JSON_NODE_MAX
   };
 
   enum JsonCallResult {

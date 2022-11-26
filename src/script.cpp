@@ -26,6 +26,12 @@
 #define LOG_EXCEPTION(exc) Log("%s: %d: unknown exception: %s", __FUNCTION__, __LINE__, (exc).what())
 #define ASSERT_NODE_EXISTS(x) if ((x) == nullptr) { Log("%s: %d: error: node not exists", __FUNCTION__, __LINE__); return JSON_CALL_NODE_NOT_EXISTS_ERR; }
 
+call_result_t script::JSON_Dump(const node_ptr_t node) {
+  ASSERT_NODE_EXISTS(node);
+  Log("%s", node->dump().c_str());
+  return JSON_CALL_NO_ERR;
+}
+
 call_result_t script::JSON_Parse(const std::string buffer, node_ptr_t *node) {
   ASSERT_NODE_EXISTS(node);
   try {
@@ -97,10 +103,10 @@ node_type_t script::JSON_NodeType(const node_ptr_t node) {
       return "binary";
     case value_t::discarded:
       return "discarded";*/
+  case value_t::number_float:return JSON_NODE_FLOAT;
   case value_t::number_integer:
-  case value_t::number_unsigned:
-  case value_t::number_float:
-  default:return JSON_NODE_NUMBER;
+  case value_t::number_unsigned:return JSON_NODE_INT;
+  default:return JSON_NODE_MAX;
   }
 }
 

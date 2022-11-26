@@ -28,6 +28,13 @@
 class script : public ptl::AbstractScript<script> {
 public:
   /**
+   * @brief Prints JsonNode to console
+   * @param node Node to dump
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if node was not specified
+   */
+  call_result_t       JSON_Dump(const node_ptr_t node);
+  /**
    * @brief Parses JSON buffer
    * @param buffer Buffer to parse
    * @param node Output node
@@ -173,7 +180,7 @@ public:
    */
   call_result_t       JSON_SetString(node_ptr_t node, const std::string key, const std::string value);
   /**
-   * @brief Sets boolean to JsonNode[key]
+   * @brief Sets object to JsonNode[key]
    * @param node Parent node
    * @param key Key of JsonNode in object
    * @param value_node Node to set
@@ -182,7 +189,7 @@ public:
    */
   call_result_t       JSON_SetObject(node_ptr_t node, const std::string key, const node_ptr_t value_node);
   /**
-   * @brief Sets boolean to JsonNode[key]
+   * @brief Sets array to JsonNode[key]
    * @param node Parent node
    * @param key Key of JsonNode in object
    * @param value_node Node to set
@@ -285,7 +292,7 @@ public:
    */
   call_result_t       JSON_ArrayIterate(node_ptr_t node, cell *index, node_ptr_t *out);
   /**
-   * @brief Appends any given JsonNode to an existing JsonNode array
+   * @brief Appends any given JsonNode to an existing JsonNode array within parent node
    * @param node Parent array to add to (object)
    * @param key Key of subnode to add in (array)
    * @param value_node Node to add
