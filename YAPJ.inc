@@ -28,7 +28,7 @@
     #define PACK_PLUGIN_VERSION(%0,%1,%2) (((%0) << 16) | ((%1) << 8) | (%2))
   #endif
 
-  #define JSON_VERSION PACK_PLUGIN_VERSION(1, 1, 0)
+  #define JSON_VERSION PACK_PLUGIN_VERSION(1, 2, 0)
 
   enum JsonNodeType {
     JSON_NODE_NULL = 64,
@@ -52,8 +52,18 @@
     JSON_CALL_NO_SUCH_DIR_ERR,
     JSON_CALL_WRONG_TYPE_ERR,
     JSON_CALL_NO_RETURN_STRING_ERR,
+    JSON_CALL_WATCHER_EXISTS_ERR,
+    JSON_CALL_NO_SUCH_WATCHER_ERR,
 
     JSON_CALL_MAX_ERR
+  };
+
+  enum JsonWatcherFileState {
+    JSON_WATCHER_FILE_CREATED,
+    JSON_WATCHER_FILE_MODIFIED,
+    JSON_WATCHER_FILE_ERASED,
+
+    JSON_WATCHER_FILE_MAX
   };
 
   #if !defined __cplusplus
@@ -63,6 +73,7 @@
     native JsonCallResult:JSON_ParseFile(const path[], &JsonNode:node);
     native JsonCallResult:JSON_SaveFile(const path[], const JsonNode:node, indent = -1);
     native JsonCallResult:JSON_Stringify(const JsonNode:node, buf[], len = sizeof(buf), indent = -1);
+    native JsonCallResult:JSON_Dump(const JsonNode:node, indent = -1);
     native JsonNodeType:JSON_NodeType(const JsonNode:node);
 
     native JsonNode:JSON_Null();
@@ -107,6 +118,10 @@
     native JsonCallResult:JSON_GetNodeInt(const JsonNode:node, &output);
     native JsonCallResult:JSON_GetNodeFloat(const JsonNode:node, &Float:output);
     native JsonCallResult:JSON_GetNodeString(const JsonNode:node, output[], len = sizeof(output));
+
+    native JsonCallResult:JSON_StartWatcher(const filename[]);
+    native JsonCallResult:JSON_StopWatcher(const filename[]);
+    forward OnJSONFileModified(const filename[], const JsonWatcherFileState:filestate);
 
     native JsonCallResult:JSON_Cleanup(JsonNode:node);
 

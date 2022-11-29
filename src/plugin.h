@@ -31,4 +31,5 @@ public:
   const char *Name();
   int Version();
   bool OnLoad();
+  void OnProcessTick();
 };

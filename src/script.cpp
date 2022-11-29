@@ -21,21 +21,16 @@
 // SOFTWARE.
 
 #include "script.h"
+#include <iostream>
 
 #define PLUGIN_LOG(text, ...) Log("%s: %d: unknown error: " text, __FUNCTION__, __LINE__ __VA_OPT__(,) __VA_ARGS__)
 #define LOG_EXCEPTION(exc) Log("%s: %d: unknown exception: %s", __FUNCTION__, __LINE__, (exc).what())
 #define ASSERT_NODE_EXISTS(x) if ((x) == nullptr) { Log("%s: %d: error: node not exists", __FUNCTION__, __LINE__); return JSON_CALL_NODE_NOT_EXISTS_ERR; }
 
-call_result_t script::JSON_Dump(const node_ptr_t node) {
-  ASSERT_NODE_EXISTS(node);
-  Log("%s", node->dump().c_str());
-  return JSON_CALL_NO_ERR;
-}
-
 call_result_t script::JSON_Parse(const std::string buffer, node_ptr_t *node) {
   ASSERT_NODE_EXISTS(node);
   try {
-    *node = new nlohmann::json(nlohmann::json::parse(buffer));
+    *node = new nlohmann::ordered_json(nlohmann::ordered_json::parse(buffer));
     return JSON_CALL_NO_ERR;
   } catch (const std::exception &e) {
     LOG_EXCEPTION(e);
@@ -50,7 +45,7 @@ call_result_t script::JSON_ParseFile(const std::filesystem::path filename, node_
       return JSON_CALL_NO_SUCH_FILE_ERR;
     }
     std::ifstream f(filename);
-    *node = new nlohmann::json(nlohmann::json::parse(f));
+    *node = new nlohmann::ordered_json(nlohmann::ordered_json::parse(f));
     return JSON_CALL_NO_ERR;
   } catch (const std::exception &e) {
     LOG_EXCEPTION(e);
@@ -81,8 +76,10 @@ call_result_t script::JSON_SaveFile(const std::filesystem::path filename, const 
 call_result_t script::JSON_Stringify(const node_ptr_t node, cell *out, const cell out_size, const cell indent) {
   ASSERT_NODE_EXISTS(node);
   try {
-    auto str = node->dump(indent);
-    SetString(out, str, out_size);
+    auto str = utf2cp(node->dump(indent));
+    if (!str.has_value())
+      return JSON_CALL_NO_RETURN_STRING_ERR;
+    SetString(out, str.value(), out_size);
     return JSON_CALL_NO_ERR;
   } catch (const std::exception &e) {
     LOG_EXCEPTION(e);
@@ -90,9 +87,15 @@ call_result_t script::JSON_Stringify(const node_ptr_t node, cell *out, const cel
   }
 }
 
+call_result_t script::JSON_Dump(const node_ptr_t node, const cell indent) {
+  ASSERT_NODE_EXISTS(node);
+  std::cout << node->dump(indent) << std::endl;
+  return JSON_CALL_NO_ERR;
+}
+
 node_type_t script::JSON_NodeType(const node_ptr_t node) {
   ASSERT_NODE_EXISTS(node);
-  using value_t = nlohmann::json::value_t;
+  using value_t = nlohmann::ordered_json::value_t;
   switch (node->type()) {
   case value_t::null:return JSON_NODE_NULL;
   case value_t::object:return JSON_NODE_OBJECT;
@@ -112,7 +115,7 @@ node_type_t script::JSON_NodeType(const node_ptr_t node) {
 
 template<typename T>
 node_ptr_result_t script::internal_JSON_ConstructNode(T value) {
-  return reinterpret_cast<node_ptr_result_t>(new nlohmann::json(value));
+  return reinterpret_cast<node_ptr_result_t>(new nlohmann::ordered_json(value));
 }
 
 node_ptr_result_t script::JSON_Null() {
@@ -140,7 +143,7 @@ node_ptr_result_t script::JSON_Object(const cell *params) {
     PLUGIN_LOG("Invalid variadic argument pattern passed: must be passed as pair");
     return 0;
   }
-  auto obj = new nlohmann::json(nlohmann::json::object());
+  auto obj = new nlohmann::ordered_json(nlohmann::ordered_json::object());
   size_t pairs = params[0] / sizeof(cell) / 2;
   for (size_t i = 0; i < pairs; ++i) {
     auto pair_ptr = params + (1 + (i * 2));
@@ -154,7 +157,7 @@ node_ptr_result_t script::JSON_Object(const cell *params) {
 }
 
 node_ptr_result_t script::JSON_Array(cell *params) {
-  auto arr = new nlohmann::json(nlohmann::json::array());
+  auto arr = new nlohmann::ordered_json(nlohmann::ordered_json::array());
   for (size_t i = 1; i <= params[0] / sizeof(cell); ++i) {
     auto item = *reinterpret_cast<node_ptr_t *>(GetPhysAddr(params[i]));
     if (item == nullptr)
@@ -176,7 +179,7 @@ node_ptr_result_t script::JSON_Append(const node_ptr_t first_node, const node_pt
     PLUGIN_LOG("Second array type does not equal to first one");
     return JSON_CALL_WRONG_TYPE_ERR;
   }
-  auto copy_first_node = new nlohmann::json(*first_node);
+  auto copy_first_node = new nlohmann::ordered_json(*first_node);
   if (copy_first_node->is_object()) {
     copy_first_node->merge_patch(*second_node);
   } else {
@@ -196,28 +199,28 @@ call_result_t script::JSON_SetNull(node_ptr_t node, const std::string key) {
   return internal_JSON_SetValue(node, key, nullptr);
 }
 
-call_result_t script::JSON_SetBool(node_ptr_t node, const std::string key, bool value) {
+call_result_t script::JSON_SetBool(node_ptr_t node, const std::string key, const bool value) {
   return internal_JSON_SetValue(node, key, value);
 }
 
-call_result_t script::JSON_SetInt(node_ptr_t node, const std::string key, cell value) {
+call_result_t script::JSON_SetInt(node_ptr_t node, const std::string key, const cell value) {
   return internal_JSON_SetValue(node, key, value);
 }
 
-call_result_t script::JSON_SetFloat(node_ptr_t node, const std::string key, float value) {
+call_result_t script::JSON_SetFloat(node_ptr_t node, const std::string key, const float value) {
   return internal_JSON_SetValue(node, key, value);
 }
 
-call_result_t script::JSON_SetString(node_ptr_t node, const std::string key, std::string value) {
+call_result_t script::JSON_SetString(node_ptr_t node, const std::string key, const std::string value) {
   return internal_JSON_SetValue(node, key, cp2utf(value));
 }
 
-call_result_t script::JSON_SetObject(node_ptr_t node, const std::string key, node_ptr_t value_node) {
+call_result_t script::JSON_SetObject(node_ptr_t node, const std::string key, const node_ptr_t value_node) {
   ASSERT_NODE_EXISTS(value_node);
   return internal_JSON_SetValue(node, key, *value_node);
 }
 
-call_result_t script::JSON_SetArray(node_ptr_t node, const std::string key, node_ptr_t value_node) {
+call_result_t script::JSON_SetArray(node_ptr_t node, const std::string key, const node_ptr_t value_node) {
   ASSERT_NODE_EXISTS(value_node);
   return internal_JSON_SetValue(node, key, *value_node);
 }
@@ -278,7 +281,7 @@ call_result_t script::JSON_GetString(node_ptr_t node, const std::string key, cel
     PLUGIN_LOG("Array item '%s' type does not equal to required one", key.c_str());
     return JSON_CALL_WRONG_TYPE_ERR;
   }
-  auto str = utf2cp(to_string(subnode));
+  auto str = utf2cp(subnode.dump());
   if (!str.has_value())
     return JSON_CALL_NO_RETURN_STRING_ERR;
   SetString(out, str.value(), out_size);
@@ -296,7 +299,7 @@ call_result_t script::JSON_GetObject(node_ptr_t node, const std::string key, nod
 //    PLUGIN_LOG("Array item '%s' type does not equal to required one", key.c_str());
 //    return JSON_CALL_WRONG_TYPE_ERR;
 //  }
-  *out = reinterpret_cast<node_ptr_t>(new nlohmann::json((*node)[key]));
+  *out = reinterpret_cast<node_ptr_t>(new nlohmann::ordered_json((*node)[key]));
   return JSON_CALL_NO_ERR;
 }
 
@@ -311,7 +314,7 @@ call_result_t script::JSON_GetArray(node_ptr_t node, const std::string key, node
     PLUGIN_LOG("Array item '%s' type does not equal to required one", key.c_str());
     return JSON_CALL_WRONG_TYPE_ERR;
   }
-  *out = reinterpret_cast<node_ptr_t>(new nlohmann::json(subnode));
+  *out = reinterpret_cast<node_ptr_t>(new nlohmann::ordered_json(subnode));
   return JSON_CALL_NO_ERR;
 }
 
@@ -336,8 +339,8 @@ call_result_t script::JSON_ArrayLength(node_ptr_t node, cell *out) {
 
 /**
  * This function is going to:
- * 1. Pick nlohmann::json from node by index
- * 2. Allocate JsonNode from nlohmann::json and push ptr to out
+ * 1. Pick nlohmann::ordered_json from node by index
+ * 2. Allocate JsonNode from nlohmann::ordered_json and push ptr to out
  * It may be useful together with JSON_NodeType, JSON_GetNode* to pick value from native JsonNode
  */
 call_result_t script::JSON_ArrayObject(node_ptr_t node, cell index, node_ptr_t *out) {
@@ -349,7 +352,7 @@ call_result_t script::JSON_ArrayObject(node_ptr_t node, cell index, node_ptr_t *
   if (node->size() <= index) {
     return JSON_CALL_NODE_NOT_EXISTS_ERR;
   }
-  *out = reinterpret_cast<node_ptr_t>(new nlohmann::json((*node)[index]));
+  *out = reinterpret_cast<node_ptr_t>(new nlohmann::ordered_json((*node)[index]));
   return JSON_CALL_NO_ERR;
 }
 
@@ -363,9 +366,8 @@ call_result_t script::JSON_ArrayIterate(node_ptr_t node, cell *index, node_ptr_t
     return JSON_CALL_NODE_NOT_EXISTS_ERR;
   }
   // TODO: Does it have to be there? Maybe AMX handles such destructors by itself?
-  if (*out != nullptr)
-    delete (*out);
-  *out = new nlohmann::json((*node)[*index]);
+  JSON_Cleanup(*out);
+  *out = new nlohmann::ordered_json((*node)[*index]);
   *index += 1;
   return JSON_CALL_NO_ERR;
 }
@@ -502,8 +504,20 @@ call_result_t script::JSON_GetNodeString(node_ptr_t node, cell *out, cell out_si
     PLUGIN_LOG("Node type does not equal to required one");
     return JSON_CALL_WRONG_TYPE_ERR;
   }
-  SetString(out, *node, out_size);
+  auto str = utf2cp(node->dump());
+  if (!str.has_value())
+    return JSON_CALL_NO_RETURN_STRING_ERR;
+  SetString(out, str.value(), out_size);
   return JSON_CALL_NO_ERR;
+}
+
+
+call_result_t script::JSON_StartWatcher(const std::filesystem::path filename) {
+  return json_watcher_instance.start(filename);
+}
+
+call_result_t script::JSON_StopWatcher(const std::filesystem::path filename) {
+  return json_watcher_instance.stop(filename);
 }
 
 call_result_t script::JSON_Cleanup(node_ptr_t node) {
@@ -512,4 +526,22 @@ call_result_t script::JSON_Cleanup(node_ptr_t node) {
     return JSON_CALL_NODE_NOT_EXISTS_ERR;
   delete node;
   return JSON_CALL_NO_ERR;
+}
+
+bool script::OnLoad() {
+  json_watcher_public = MakePublic("OnJSONFileModified", true);
+  return true;
+}
+
+bool script::OnProcessTick() {
+  json_watcher_instance.process(this);
+  return true;
+}
+
+bool script::json_watcher_handler(const std::filesystem::path &filename, const JsonWatcherFileState state) {
+  if (json_watcher_public && json_watcher_public->Exists()) {
+    json_watcher_public->Exec(filename.string().c_str(), state);
+    return true;
+  }
+  return false;
 }

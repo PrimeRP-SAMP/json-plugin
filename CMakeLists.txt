@@ -22,7 +22,7 @@ include(AddSAMPPlugin)
 
 include_directories(third-party)
 
-add_samp_plugin(${PROJECT_NAME} src/main.cpp src/common.h src/plugin.cpp src/plugin.h src/plugin.def src/script.cpp src/script.h src/native_param.h)
+add_samp_plugin(${PROJECT_NAME} src/main.cpp src/common.h src/plugin.cpp src/plugin.h src/plugin.def src/script.cpp src/script.h src/native_param.h src/json_watcher.cpp src/json_watcher.h)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     # x32 only

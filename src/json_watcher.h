@@ -20,23 +20,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "pool.h"
+#pragma once
 
-template<typename T>
-pool::node_entry::node_entry(T value_, bool gc_) : value(value_), gc(gc_) {}
+#include "common.h"
 
-template<typename T>
-node_ptr_t pool::alloc(T value) {
-  nodes[++current_node] = value;
-  return current_node;
-}
+class json_watcher {
+  static constexpr std::chrono::milliseconds kIntervalMs{1000};
+  struct watcher_entry {
+    bool is_exists;
+    std::filesystem::file_time_type last_edit;
 
-nlohmann::json &pool::get(node_ptr_t id) {
-  if (nodes.contains(id))
-    throw std::runtime_error("Invalid node id");
-  return nodes.at(id).value;
-}
+    watcher_entry(const std::filesystem::path &path);
+  };
+  std::unordered_map<std::filesystem::path, watcher_entry> files{};
+public:
+  call_result_t start(const std::filesystem::path &filename);
+  call_result_t stop(const std::filesystem::path &filename);
 
-nlohmann::json pool::take(node_ptr_t id) {
-  return nlohmann::json();
-}
+  JsonWatcherFileState get_file_state(const std::filesystem::path &filename, watcher_entry &entry);
+  void process(class script *scr);
+};

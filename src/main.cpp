@@ -24,7 +24,7 @@
 #include "plugin.h"
 
 PLUGIN_EXPORT unsigned int PLUGIN_CALL Supports() {
-  return SUPPORTS_VERSION | SUPPORTS_AMX_NATIVES;
+  return SUPPORTS_VERSION | SUPPORTS_AMX_NATIVES | SUPPORTS_PROCESS_TICK;
 }
 
 PLUGIN_EXPORT bool PLUGIN_CALL Load(void **ppData) {
@@ -41,4 +41,8 @@ PLUGIN_EXPORT void PLUGIN_CALL AmxLoad(AMX *amx) {
 
 PLUGIN_EXPORT void PLUGIN_CALL AmxUnload(AMX *amx) {
   plugin::DoAmxUnload(amx);
+}
+
+PLUGIN_EXPORT void PLUGIN_CALL ProcessTick() {
+  plugin::DoProcessTick();
 }

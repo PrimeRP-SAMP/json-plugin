@@ -30,6 +30,7 @@ bool plugin::OnLoad() {
   REGISTER_NATIVE(JSON_ParseFile);
   REGISTER_NATIVE(JSON_SaveFile);
   REGISTER_NATIVE(JSON_Stringify);
+  REGISTER_NATIVE(JSON_Dump);
   REGISTER_NATIVE(JSON_NodeType);
 
   REGISTER_NATIVE(JSON_Null);
@@ -75,9 +76,10 @@ bool plugin::OnLoad() {
   REGISTER_NATIVE(JSON_GetNodeFloat);
   REGISTER_NATIVE(JSON_GetNodeString);
 
-  //REGISTER_NATIVE(JSON_ToggleGC);
+  REGISTER_NATIVE(JSON_StartWatcher);
+  REGISTER_NATIVE(JSON_StopWatcher);
+
   REGISTER_NATIVE(JSON_Cleanup);
-  //REGISTER_NATIVE(JSON_CountNodes);
 
   Log("\n\n"
       "    | %s %s | 2022 - %s"
@@ -105,4 +107,10 @@ const char *plugin::Name() {
 
 int plugin::Version() {
   return JSON_VERSION;
+}
+
+void plugin::OnProcessTick() {
+  plugin::EveryScript([=](auto &script) {
+    return script->OnProcessTick();
+  });
 }

@@ -31,7 +31,7 @@
 #include "samp-ptl/ptl.h"
 
 // Plugin types
-typedef nlohmann::json *node_ptr_t;
+typedef nlohmann::ordered_json *node_ptr_t;
 typedef cell node_ptr_result_t;
 typedef cell call_result_t;
 typedef cell node_type_t;

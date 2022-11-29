@@ -23,17 +23,11 @@
 #pragma once
 
 #include "common.h"
+#include "json_watcher.h"
 #include "iconvlite.hpp"
 
 class script : public ptl::AbstractScript<script> {
 public:
-  /**
-   * @brief Prints JsonNode to console
-   * @param node Node to dump
-   * @return    JSON_CALL_NO_ERR on success
-   *            JSON_CALL_NODE_NOT_EXISTS_ERR if node was not specified
-   */
-  call_result_t       JSON_Dump(const node_ptr_t node);
   /**
    * @brief Parses JSON buffer
    * @param buffer Buffer to parse
@@ -73,8 +67,17 @@ public:
    * @return    JSON_CALL_NO_ERR on success
    *            JSON_CALL_PARSER_ERR on parser error
    *            JSON_CALL_NODE_NOT_EXISTS_ERR if no output node was provided
+   *            JSON_CALL_NO_RETURN_STRING_ERR if utf2cp converter did not return string
    */
   call_result_t       JSON_Stringify(const node_ptr_t node, cell *out, const cell out_size, const cell indent);
+  /**
+   * @brief Prints JsonNode to console
+   * @param node Node to dump
+   * @param indent Count of spaces for tabulation. Default: -1
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if node was not specified
+   */
+  call_result_t       JSON_Dump(const node_ptr_t node, const cell indent);
   /**
    * @brief Returns node type
    * @param node Node to check type of
@@ -128,10 +131,15 @@ public:
    */
   node_ptr_result_t   JSON_Array(cell *params);
 
-  /** TODO: Complete */
+  /**
+   * @brief Appends second_node to first_node
+   * @param first_node Parent node
+   * @param second_node Node to add
+   * @return    JsonNode on success
+   *            JSON_CALL_WRONG_TYPE_ERR if type of first node is not the same one or if their type is not an array or object
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if first or second node was not provided
+   */
   node_ptr_result_t   JSON_Append(const node_ptr_t first_node, const node_ptr_t second_node);
-  /** TODO: Complete */
-  node_ptr_result_t   JSON_Merge(const node_ptr_t first_node, const node_ptr_t second_node);
 
   template            <typename T>
   call_result_t       internal_JSON_SetValue(node_ptr_t node, const std::string key, const T value);
@@ -233,6 +241,7 @@ public:
    * @param out_size Output buffer size
    * @return    JSON_CALL_NO_ERR on success
    *            JSON_CALL_NODE_NOT_EXISTS_ERR if node was not provided or there is no node by provided key
+   *            JSON_CALL_NO_RETURN_STRING_ERR if utf2cp converter did not return string
    */
   call_result_t       JSON_GetString(node_ptr_t node, const std::string key, cell *out, cell out_size);
   /**
@@ -331,7 +340,6 @@ public:
    *            JSON_CALL_NODE_NOT_EXISTS_ERR if node was not provided or there is no node by provided key/index
    */
   call_result_t       JSON_ArrayClear(node_ptr_t node, const std::string key);
-  call_result_t       JSON_Keys(node_ptr_t node, cell index, char *out, cell out_size);
   /**
    * @brief Removes an item from object by specified key
    * @param node Parent node (object)
@@ -377,8 +385,24 @@ public:
    * @return    JSON_CALL_NO_ERR on success
    *            JSON_CALL_WRONG_TYPE_ERR if parent node or subnode is not an array
    *            JSON_CALL_NODE_NOT_EXISTS_ERR if node was not provided
+   *            JSON_CALL_NO_RETURN_STRING_ERR if utf2cp converter did not return string
    */
   call_result_t       JSON_GetNodeString(node_ptr_t node, cell *out, cell out_size);
+
+  /**
+   * @brief Starts a JSON watcher to track file changes
+   * @param filename Name of JSON file
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_WATCHER_EXISTS_ERR if watcher exists
+   */
+  call_result_t       JSON_StartWatcher(const std::filesystem::path filename);
+  /**
+   * @brief Stops a JSON watcher
+   * @param filename Name of JSON file
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_NO_SUCH_WATCHER_ERR if watcher not exists
+   */
+  call_result_t       JSON_StopWatcher(const std::filesystem::path filename);
 
   /**
    * @brief ONLY FOR INTERNAL USAGE! Destroys allocated JsonNode.
@@ -387,4 +411,12 @@ public:
    *            JSON_CALL_NODE_NOT_EXISTS_ERR if node was not provided
    */
   call_result_t       JSON_Cleanup(node_ptr_t node);
+
+
+  bool OnLoad();
+  bool OnProcessTick();
+
+  bool json_watcher_handler(const std::filesystem::path &filename, const JsonWatcherFileState state);
+  std::shared_ptr<ptl::Public> json_watcher_public{nullptr};
+  json_watcher json_watcher_instance{};
 };
