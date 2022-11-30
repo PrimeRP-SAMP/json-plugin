@@ -32,7 +32,7 @@ class json_watcher {
 
     watcher_entry(const std::filesystem::path &path);
   };
-  std::unordered_map<std::filesystem::path, watcher_entry> files{};
+  std::unordered_map<std::string, watcher_entry> files;
 public:
   call_result_t start(const std::filesystem::path &filename);
   call_result_t stop(const std::filesystem::path &filename);

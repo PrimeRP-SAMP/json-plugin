@@ -25,6 +25,7 @@
 #include <filesystem>
 #include <variant>
 #include <fstream>
+#include <chrono>
 
 // Third-party libraries
 #include "json/single_include/nlohmann/json.hpp"

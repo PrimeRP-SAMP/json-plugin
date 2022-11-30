@@ -24,16 +24,16 @@
 #include "plugin.h"
 
 call_result_t json_watcher::start(const std::filesystem::path &filename) {
-  if (files.contains(filename))
+  if (files.contains(filename.string()))
     return JSON_CALL_WATCHER_EXISTS_ERR;
-  files.insert(std::make_pair(filename, watcher_entry(filename)));
+  files.insert(std::make_pair(filename.string(), watcher_entry(filename)));
   return JSON_CALL_NO_ERR;
 }
 
 call_result_t json_watcher::stop(const std::filesystem::path &filename) {
-  if (!files.contains(filename))
+  if (!files.contains(filename.string()))
     return JSON_CALL_NO_SUCH_WATCHER_ERR;
-  files.erase(filename);
+  files.erase(filename.string());
   return JSON_CALL_NO_ERR;
 }
 
@@ -52,7 +52,7 @@ JsonWatcherFileState json_watcher::get_file_state(const std::filesystem::path &f
 }
 
 void json_watcher::process(script *scr) {
-  static std::chrono::steady_clock::time_point last_check = std::chrono::steady_clock::now();
+  static auto last_check = std::chrono::steady_clock::now();
   if (files.empty())
     return;
   auto now = std::chrono::steady_clock::now();

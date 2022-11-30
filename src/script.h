@@ -418,5 +418,5 @@ public:
 
   bool json_watcher_handler(const std::filesystem::path &filename, const JsonWatcherFileState state);
   std::shared_ptr<ptl::Public> json_watcher_public{nullptr};
-  json_watcher json_watcher_instance{};
+  json_watcher json_watcher_instance;
 };
