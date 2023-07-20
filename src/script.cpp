@@ -121,7 +121,9 @@ node_type_t script::JSON_NodeType(const node_ptr_t node) {
 
 template<typename T>
 node_ptr_result_t script::internal_JSON_ConstructNode(T value) {
-  return reinterpret_cast<node_ptr_result_t>(new nlohmann::ordered_json(value));
+  auto ptr = new nlohmann::ordered_json(value);
+  valid_nodes.push_back(ptr);
+  return reinterpret_cast<node_ptr_result_t>(ptr);
 }
 
 node_ptr_result_t script::JSON_Null() {
@@ -156,7 +158,7 @@ node_ptr_result_t script::JSON_Object(const cell *params) {
     auto pair_ptr = params + (1 + (i * 2));
     auto key = GetString(*pair_ptr);
     auto item = *reinterpret_cast<node_ptr_t *>(GetPhysAddr(*(++pair_ptr)));
-    if (item == nullptr)
+    if (item == nullptr || std::find(valid_nodes.cbegin(), valid_nodes.cend(), item) == valid_nodes.cend())
       continue;
     (*obj)[key] = *item;
   }
@@ -168,7 +170,7 @@ node_ptr_result_t script::JSON_Array(cell *params) {
   valid_nodes.push_back(arr);
   for (size_t i = 1; i <= params[0] / sizeof(cell); ++i) {
     auto item = *reinterpret_cast<node_ptr_t *>(GetPhysAddr(params[i]));
-    if (item == nullptr)
+    if (item == nullptr || std::find(valid_nodes.cbegin(), valid_nodes.cend(), item) == valid_nodes.cend())
       continue;
     arr->emplace_back(*item);
   }
@@ -290,7 +292,8 @@ call_result_t script::JSON_GetString(node_ptr_t node, const std::string key, cel
     PLUGIN_LOG("Array item '%s' type does not equal to required one", key.c_str());
     return JSON_CALL_WRONG_TYPE_ERR;
   }
-  auto str = utf2cp(subnode.dump());
+  std::string str_ = subnode;
+  auto str = utf2cp(str_);
   if (!str.has_value())
     return JSON_CALL_NO_RETURN_STRING_ERR;
   SetString(out, str.value(), out_size);
@@ -309,6 +312,7 @@ call_result_t script::JSON_GetObject(node_ptr_t node, const std::string key, nod
 //    return JSON_CALL_WRONG_TYPE_ERR;
 //  }
   *out = reinterpret_cast<node_ptr_t>(new nlohmann::ordered_json((*node)[key]));
+  valid_nodes.push_back(*out);
   return JSON_CALL_NO_ERR;
 }
 
@@ -324,6 +328,7 @@ call_result_t script::JSON_GetArray(node_ptr_t node, const std::string key, node
     return JSON_CALL_WRONG_TYPE_ERR;
   }
   *out = reinterpret_cast<node_ptr_t>(new nlohmann::ordered_json(subnode));
+  valid_nodes.push_back(*out);
   return JSON_CALL_NO_ERR;
 }
 
@@ -362,6 +367,7 @@ call_result_t script::JSON_ArrayObject(node_ptr_t node, cell index, node_ptr_t *
     return JSON_CALL_NODE_NOT_EXISTS_ERR;
   }
   *out = reinterpret_cast<node_ptr_t>(new nlohmann::ordered_json((*node)[index]));
+  valid_nodes.push_back(*out);
   return JSON_CALL_NO_ERR;
 }
 
@@ -514,7 +520,8 @@ call_result_t script::JSON_GetNodeString(node_ptr_t node, cell *out, cell out_si
     PLUGIN_LOG("Node type does not equal to required one");
     return JSON_CALL_WRONG_TYPE_ERR;
   }
-  auto str = utf2cp(node->dump());
+  std::string str_ = *node;
+  auto str = utf2cp(str_);
   if (!str.has_value())
     return JSON_CALL_NO_RETURN_STRING_ERR;
   SetString(out, str.value(), out_size);
