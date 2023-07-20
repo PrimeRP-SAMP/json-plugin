@@ -25,12 +25,16 @@
 
 #define PLUGIN_LOG(text, ...) Log("%s: %d: unknown error: " text, __FUNCTION__, __LINE__ __VA_OPT__(,) __VA_ARGS__)
 #define LOG_EXCEPTION(exc) Log("%s: %d: unknown exception: %s", __FUNCTION__, __LINE__, (exc).what())
-#define ASSERT_NODE_EXISTS(x) if ((x) == nullptr) { Log("%s: %d: error: node not exists", __FUNCTION__, __LINE__); return JSON_CALL_NODE_NOT_EXISTS_ERR; }
+#define ASSERT_NODE_EXISTS(x) if ((x) == nullptr || std::find(valid_nodes.cbegin(), valid_nodes.cend(), (x)) == valid_nodes.cend()) { Log("%s: %d: error: node not exists", __FUNCTION__, __LINE__); return JSON_CALL_NODE_NOT_EXISTS_ERR; }
+
+inline std::vector<node_ptr_t> valid_nodes;
 
 call_result_t script::JSON_Parse(const std::string buffer, node_ptr_t *node) {
-  ASSERT_NODE_EXISTS(node);
+  if (node == nullptr)
+    return JSON_CALL_NODE_NOT_EXISTS_ERR;
   try {
     *node = new nlohmann::ordered_json(nlohmann::ordered_json::parse(buffer));
+    valid_nodes.push_back(*node);
     return JSON_CALL_NO_ERR;
   } catch (const std::exception &e) {
     LOG_EXCEPTION(e);
@@ -39,13 +43,15 @@ call_result_t script::JSON_Parse(const std::string buffer, node_ptr_t *node) {
 }
 
 call_result_t script::JSON_ParseFile(const std::filesystem::path filename, node_ptr_t *node) {
-  ASSERT_NODE_EXISTS(node);
+  if (node == nullptr)
+    return JSON_CALL_NODE_NOT_EXISTS_ERR;
   try {
     if (!exists(filename) || !is_regular_file(filename)) {
       return JSON_CALL_NO_SUCH_FILE_ERR;
     }
     std::ifstream f(filename);
     *node = new nlohmann::ordered_json(nlohmann::ordered_json::parse(f));
+    valid_nodes.push_back(*node);
     return JSON_CALL_NO_ERR;
   } catch (const std::exception &e) {
     LOG_EXCEPTION(e);
@@ -144,6 +150,7 @@ node_ptr_result_t script::JSON_Object(const cell *params) {
     return 0;
   }
   auto obj = new nlohmann::ordered_json(nlohmann::ordered_json::object());
+  valid_nodes.push_back(obj);
   size_t pairs = params[0] / sizeof(cell) / 2;
   for (size_t i = 0; i < pairs; ++i) {
     auto pair_ptr = params + (1 + (i * 2));
@@ -158,6 +165,7 @@ node_ptr_result_t script::JSON_Object(const cell *params) {
 
 node_ptr_result_t script::JSON_Array(cell *params) {
   auto arr = new nlohmann::ordered_json(nlohmann::ordered_json::array());
+  valid_nodes.push_back(arr);
   for (size_t i = 1; i <= params[0] / sizeof(cell); ++i) {
     auto item = *reinterpret_cast<node_ptr_t *>(GetPhysAddr(params[i]));
     if (item == nullptr)
@@ -180,6 +188,7 @@ node_ptr_result_t script::JSON_Append(const node_ptr_t first_node, const node_pt
     return JSON_CALL_WRONG_TYPE_ERR;
   }
   auto copy_first_node = new nlohmann::ordered_json(*first_node);
+  valid_nodes.push_back(copy_first_node);
   if (copy_first_node->is_object()) {
     copy_first_node->merge_patch(*second_node);
   } else {
@@ -368,6 +377,7 @@ call_result_t script::JSON_ArrayIterate(node_ptr_t node, cell *index, node_ptr_t
   // TODO: Does it have to be there? Maybe AMX handles such destructors by itself?
   JSON_Cleanup(*out);
   *out = new nlohmann::ordered_json((*node)[*index]);
+  valid_nodes.push_back(*out);
   *index += 1;
   return JSON_CALL_NO_ERR;
 }
@@ -521,10 +531,12 @@ call_result_t script::JSON_StopWatcher(const std::filesystem::path filename) {
 }
 
 call_result_t script::JSON_Cleanup(node_ptr_t node) {
+  auto node_iter = std::find(valid_nodes.begin(), valid_nodes.end(), node);
   // Silently return because node may be not initialized
-  if (node == nullptr)
+  if (node == nullptr || node_iter == valid_nodes.end())
     return JSON_CALL_NODE_NOT_EXISTS_ERR;
   delete node;
+  valid_nodes.erase(node_iter);
   return JSON_CALL_NO_ERR;
 }
 
