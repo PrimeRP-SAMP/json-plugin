@@ -24,14 +24,14 @@
 #include "plugin.h"
 
 call_result_t json_watcher::start(const std::filesystem::path &filename) {
-  if (files.contains(filename.string()))
+  if (files.find(filename.string()) != files.cend())
     return JSON_CALL_WATCHER_EXISTS_ERR;
   files.insert(std::make_pair(filename.string(), watcher_entry(filename)));
   return JSON_CALL_NO_ERR;
 }
 
 call_result_t json_watcher::stop(const std::filesystem::path &filename) {
-  if (!files.contains(filename.string()))
+  if (files.find(filename.string()) == files.cend())
     return JSON_CALL_NO_SUCH_WATCHER_ERR;
   files.erase(filename.string());
   return JSON_CALL_NO_ERR;
@@ -39,7 +39,7 @@ call_result_t json_watcher::stop(const std::filesystem::path &filename) {
 
 JsonWatcherFileState json_watcher::get_file_state(const std::filesystem::path &filename, watcher_entry &entry) {
   auto is_exists = exists(filename);
-  auto last_edit = is_exists ? last_write_time(filename) : std::chrono::file_clock::now();
+  auto last_edit = is_exists ? last_write_time(filename) : std::chrono::system_clock::now();
   if (entry.is_exists != is_exists) {
     entry.is_exists = is_exists;
     entry.last_edit = last_edit;
@@ -69,4 +69,4 @@ void json_watcher::process(script *scr) {
 }
 
 json_watcher::watcher_entry::watcher_entry(const std::filesystem::path &path)
-    : is_exists(exists(path)), last_edit(is_exists ? last_write_time(path) : std::chrono::file_clock::now()) {}
+    : is_exists(exists(path)), last_edit(is_exists ? last_write_time(path) : std::chrono::system_clock::now()) {}
