@@ -28,7 +28,7 @@
     #define PACK_PLUGIN_VERSION(%0,%1,%2) (((%0) << 16) | ((%1) << 8) | (%2))
   #endif
 
-  #define JSON_VERSION PACK_PLUGIN_VERSION(1, 2, 2)
+  #define JSON_VERSION PACK_PLUGIN_VERSION(1, 2, 3)
 
   enum JsonNodeType {
     JSON_NODE_NULL = 64,
@@ -113,6 +113,8 @@
     native JsonCallResult:JSON_ArrayClear(JsonNode:node, const key[]);
     //native JsonCallResult:JSON_ArrayKeys(JsonNode:node, const key[]);
     native JsonCallResult:JSON_Remove(JsonNode:node, const key[]);
+
+    native JsonCallResult:JSON_ArrayAppendEx(JsonNode:node, const JsonNode:input);
 
     native JsonCallResult:JSON_GetNodeBool(const JsonNode:node, &bool:output);
     native JsonCallResult:JSON_GetNodeInt(const JsonNode:node, &output);

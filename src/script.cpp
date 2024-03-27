@@ -404,6 +404,17 @@ call_result_t script::JSON_ArrayAppend(node_ptr_t node, const std::string key, n
   return JSON_CALL_NO_ERR;
 }
 
+call_result_t script::JSON_ArrayAppendEx(node_ptr_t node, node_ptr_t value_node) {
+  ASSERT_NODE_EXISTS(node);
+  ASSERT_NODE_EXISTS(value_node);
+  if (!node->is_array()) {
+    PLUGIN_LOG("Node type does not equal to required one");
+    return JSON_CALL_WRONG_TYPE_ERR;
+  }
+  node->emplace_back(*value_node);
+  return JSON_CALL_NO_ERR;
+}
+
 call_result_t script::JSON_ArrayRemove(node_ptr_t node, const std::string key, node_ptr_t value_node) {
   ASSERT_NODE_EXISTS(node);
   ASSERT_NODE_EXISTS(value_node);

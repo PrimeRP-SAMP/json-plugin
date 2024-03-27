@@ -311,6 +311,15 @@ public:
    */
   call_result_t       JSON_ArrayAppend(node_ptr_t node, const std::string key, node_ptr_t value_node);
   /**
+   * @brief Appends any given JsonNode to an existing JsonNode array
+   * @param node Parent array to add to (array)
+   * @param value_node Node to add
+   * @return    JSON_CALL_NO_ERR on success
+   *            JSON_CALL_WRONG_TYPE_ERR if parent node is not an array
+   *            JSON_CALL_NODE_NOT_EXISTS_ERR if parent or value node not exists
+   */
+  call_result_t       JSON_ArrayAppendEx(node_ptr_t node, node_ptr_t value_node);
+  /**
    * @brief Removes item(s) from array within parent node if they equal to value_node
    * @param node Parent node (object)
    * @param key Key of array within parent object
