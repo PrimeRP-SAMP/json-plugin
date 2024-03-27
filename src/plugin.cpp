@@ -65,6 +65,7 @@ bool plugin::OnLoad() {
   REGISTER_NATIVE(JSON_ArrayObject);
   REGISTER_NATIVE(JSON_ArrayIterate);
   REGISTER_NATIVE(JSON_ArrayAppend);
+  REGISTER_NATIVE(JSON_ArrayAppendEx);
   REGISTER_NATIVE(JSON_ArrayRemove);
   REGISTER_NATIVE(JSON_ArrayRemoveIndex);
   REGISTER_NATIVE(JSON_ArrayClear);
