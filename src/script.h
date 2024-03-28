@@ -293,7 +293,7 @@ public:
   /**
    * @brief Iterates an array and pushes next item index and current item into out
    * @param node An array to iterate
-   * @param index Index of next item
+   * @param index Index of current item (pass -1 if starting)
    * @param out Output JsonNode
    * @return    JSON_CALL_NO_ERR on success
    *            JSON_CALL_WRONG_TYPE_ERR if parent node is not an array

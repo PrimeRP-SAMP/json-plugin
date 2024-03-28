@@ -377,14 +377,15 @@ call_result_t script::JSON_ArrayIterate(node_ptr_t node, cell *index, node_ptr_t
     PLUGIN_LOG("Node type does not equal to required one");
     return JSON_CALL_WRONG_TYPE_ERR;
   }
-  if (node->size() <= *index) {
+  auto next_index = *index + 1; // adding to the index here because -1 should be passed for the first iteration
+  if (node->size() <= next_index) {
     return JSON_CALL_NODE_NOT_EXISTS_ERR;
   }
   // TODO: Does it have to be there? Maybe AMX handles such destructors by itself?
   JSON_Cleanup(*out);
-  *out = new nlohmann::ordered_json((*node)[*index]);
+  *out = new nlohmann::ordered_json((*node)[next_index]);
   valid_nodes.push_back(*out);
-  *index += 1;
+  *index = next_index;
   return JSON_CALL_NO_ERR;
 }
 
