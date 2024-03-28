@@ -33,7 +33,7 @@ call_result_t script::JSON_Parse(const std::string buffer, node_ptr_t *node) {
   if (node == nullptr)
     return JSON_CALL_NODE_NOT_EXISTS_ERR;
   try {
-    *node = new nlohmann::ordered_json(nlohmann::ordered_json::parse(buffer));
+    *node = new nlohmann::ordered_json(nlohmann::ordered_json::parse(cp2utf(buffer)));
     valid_nodes.push_back(*node);
     return JSON_CALL_NO_ERR;
   } catch (const std::exception &e) {
@@ -70,7 +70,7 @@ call_result_t script::JSON_SaveFile(const std::filesystem::path filename, const 
         return JSON_CALL_NO_SUCH_DIR_ERR;
       }
     }
-    std::ofstream o(filename, std::ofstream::out | std::ofstream::trunc);
+    std::ofstream o(filename, std::ofstream::trunc);
     o << node->dump(indent) << std::endl;
     return JSON_CALL_NO_ERR;
   } catch (const std::exception &e) {
