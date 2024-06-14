@@ -25,7 +25,7 @@
 
 #define PLUGIN_LOG(text, ...) Log("%s: %d: unknown error: " text, __FUNCTION__, __LINE__ __VA_OPT__(,) __VA_ARGS__)
 #define LOG_EXCEPTION(exc) Log("%s: %d: unknown exception: %s", __FUNCTION__, __LINE__, (exc).what())
-#define ASSERT_NODE_EXISTS(x) if ((x) == nullptr || std::find(valid_nodes.cbegin(), valid_nodes.cend(), (x)) == valid_nodes.cend()) { Log("%s: %d: error: node not exists", __FUNCTION__, __LINE__); return JSON_CALL_NODE_NOT_EXISTS_ERR; }
+#define ASSERT_NODE_EXISTS(x) if ((x) == nullptr || valid_nodes.find((x)) == valid_nodes.cend()) { Log("%s: %d: error: node not exists", __FUNCTION__, __LINE__); return JSON_CALL_NODE_NOT_EXISTS_ERR; }
 
 inline std::unordered_set<node_ptr_t> valid_nodes;
 
