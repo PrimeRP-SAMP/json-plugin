@@ -33,6 +33,7 @@ call_result_t script::JSON_Parse(const std::string buffer, node_ptr_t *node) {
   if (node == nullptr)
     return JSON_CALL_NODE_NOT_EXISTS_ERR;
   try {
+    JSON_Cleanup(*node);
     *node = new nlohmann::ordered_json(nlohmann::ordered_json::parse(cp2utf(buffer)));
     valid_nodes.push_back(*node);
     return JSON_CALL_NO_ERR;
@@ -50,6 +51,7 @@ call_result_t script::JSON_ParseFile(const std::filesystem::path filename, node_
       return JSON_CALL_NO_SUCH_FILE_ERR;
     }
     std::ifstream f(filename);
+    JSON_Cleanup(*node);
     *node = new nlohmann::ordered_json(nlohmann::ordered_json::parse(f));
     valid_nodes.push_back(*node);
     return JSON_CALL_NO_ERR;
@@ -161,6 +163,7 @@ node_ptr_result_t script::JSON_Object(const cell *params) {
     if (item == nullptr || std::find(valid_nodes.cbegin(), valid_nodes.cend(), item) == valid_nodes.cend())
       continue;
     (*obj)[key] = *item;
+    JSON_Cleanup(item);
   }
   return reinterpret_cast<node_ptr_result_t>(obj);
 }
@@ -173,6 +176,7 @@ node_ptr_result_t script::JSON_Array(cell *params) {
     if (item == nullptr || std::find(valid_nodes.cbegin(), valid_nodes.cend(), item) == valid_nodes.cend())
       continue;
     arr->emplace_back(*item);
+    JSON_Cleanup(item);
   }
   return reinterpret_cast<node_ptr_result_t>(arr);
 }
@@ -196,6 +200,8 @@ node_ptr_result_t script::JSON_Append(const node_ptr_t first_node, const node_pt
   } else {
     copy_first_node->insert(copy_first_node->end(), second_node->begin(), second_node->end());
   }
+  JSON_Cleanup(first_node);
+  JSON_Cleanup(second_node);
   return reinterpret_cast<node_ptr_result_t>(copy_first_node);
 }
 
@@ -228,12 +234,20 @@ call_result_t script::JSON_SetString(node_ptr_t node, const std::string key, con
 
 call_result_t script::JSON_SetObject(node_ptr_t node, const std::string key, const node_ptr_t value_node) {
   ASSERT_NODE_EXISTS(value_node);
-  return internal_JSON_SetValue(node, key, *value_node);
+  auto result = internal_JSON_SetValue(node, key, *value_node);
+  if (result == JSON_CALL_NO_ERR) {
+    JSON_Cleanup(value_node);
+  }
+  return result;
 }
 
 call_result_t script::JSON_SetArray(node_ptr_t node, const std::string key, const node_ptr_t value_node) {
   ASSERT_NODE_EXISTS(value_node);
-  return internal_JSON_SetValue(node, key, *value_node);
+  auto result = internal_JSON_SetValue(node, key, *value_node);
+  if (result == JSON_CALL_NO_ERR) {
+    JSON_Cleanup(value_node);
+  }
+  return result;
 }
 
 call_result_t script::JSON_GetBool(node_ptr_t node, const std::string key, bool *out) {
@@ -311,6 +325,7 @@ call_result_t script::JSON_GetObject(node_ptr_t node, const std::string key, nod
 //    PLUGIN_LOG("Array item '%s' type does not equal to required one", key.c_str());
 //    return JSON_CALL_WRONG_TYPE_ERR;
 //  }
+  JSON_Cleanup(*out);
   *out = reinterpret_cast<node_ptr_t>(new nlohmann::ordered_json((*node)[key]));
   valid_nodes.push_back(*out);
   return JSON_CALL_NO_ERR;
@@ -327,6 +342,7 @@ call_result_t script::JSON_GetArray(node_ptr_t node, const std::string key, node
     PLUGIN_LOG("Array item '%s' type does not equal to required one", key.c_str());
     return JSON_CALL_WRONG_TYPE_ERR;
   }
+  JSON_Cleanup(*out);
   *out = reinterpret_cast<node_ptr_t>(new nlohmann::ordered_json(subnode));
   valid_nodes.push_back(*out);
   return JSON_CALL_NO_ERR;
@@ -366,6 +382,7 @@ call_result_t script::JSON_ArrayObject(node_ptr_t node, cell index, node_ptr_t *
   if (node->size() <= index) {
     return JSON_CALL_NODE_NOT_EXISTS_ERR;
   }
+  JSON_Cleanup(*out);
   *out = reinterpret_cast<node_ptr_t>(new nlohmann::ordered_json((*node)[index]));
   valid_nodes.push_back(*out);
   return JSON_CALL_NO_ERR;
@@ -381,7 +398,6 @@ call_result_t script::JSON_ArrayIterate(node_ptr_t node, cell *index, node_ptr_t
   if (node->size() <= next_index) {
     return JSON_CALL_NODE_NOT_EXISTS_ERR;
   }
-  // TODO: Does it have to be there? Maybe AMX handles such destructors by itself?
   JSON_Cleanup(*out);
   *out = new nlohmann::ordered_json((*node)[next_index]);
   valid_nodes.push_back(*out);
@@ -402,6 +418,7 @@ call_result_t script::JSON_ArrayAppend(node_ptr_t node, const std::string key, n
     return JSON_CALL_WRONG_TYPE_ERR;
   }
   subnode.emplace_back(*value_node);
+  JSON_Cleanup(value_node);
   return JSON_CALL_NO_ERR;
 }
 
@@ -413,6 +430,7 @@ call_result_t script::JSON_ArrayAppendEx(node_ptr_t node, node_ptr_t value_node)
     return JSON_CALL_WRONG_TYPE_ERR;
   }
   node->emplace_back(*value_node);
+  JSON_Cleanup(value_node);
   return JSON_CALL_NO_ERR;
 }
 
@@ -555,6 +573,7 @@ call_result_t script::JSON_Cleanup(node_ptr_t node) {
   if (node == nullptr || node_iter == valid_nodes.end())
     return JSON_CALL_NODE_NOT_EXISTS_ERR;
   delete node;
+  if (valid_nodes.size() > 5) PLUGIN_LOG("Count of valid nodes: %d", valid_nodes.size());
   valid_nodes.erase(node_iter);
   return JSON_CALL_NO_ERR;
 }
