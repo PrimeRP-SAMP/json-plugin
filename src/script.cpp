@@ -575,7 +575,6 @@ call_result_t script::JSON_Cleanup(node_ptr_t node) {
   if (node_iter == valid_nodes.end())
     return JSON_CALL_NODE_NOT_EXISTS_ERR;
   delete node;
-  if (valid_nodes.size() > 5) PLUGIN_LOG("Count of valid nodes: %d", valid_nodes.size());
   valid_nodes.erase(node_iter);
   return JSON_CALL_NO_ERR;
 }
