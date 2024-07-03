@@ -29,6 +29,25 @@
 
 inline std::unordered_set<node_ptr_t> valid_nodes;
 
+inline node_type_t internal_JSON_NodeType(const node_ptr_t node) {
+  using value_t = nlohmann::ordered_json::value_t;
+  switch (node->type()) {
+  case value_t::null:return JSON_NODE_NULL;
+  case value_t::object:return JSON_NODE_OBJECT;
+  case value_t::array:return JSON_NODE_ARRAY;
+  case value_t::string:return JSON_NODE_STRING;
+  case value_t::boolean:return JSON_NODE_BOOLEAN;
+    /*case value_t::binary:
+      return "binary";
+    case value_t::discarded:
+      return "discarded";*/
+  case value_t::number_float:return JSON_NODE_FLOAT;
+  case value_t::number_integer:
+  case value_t::number_unsigned:return JSON_NODE_INT;
+  default:return JSON_NODE_MAX;
+  }
+}
+
 call_result_t script::JSON_Parse(const std::string buffer, node_ptr_t *node) {
   if (node == nullptr)
     return JSON_CALL_NODE_NOT_EXISTS_ERR;
@@ -103,22 +122,7 @@ call_result_t script::JSON_Dump(const node_ptr_t node, const cell indent) {
 
 node_type_t script::JSON_NodeType(const node_ptr_t node) {
   ASSERT_NODE_EXISTS(node);
-  using value_t = nlohmann::ordered_json::value_t;
-  switch (node->type()) {
-  case value_t::null:return JSON_NODE_NULL;
-  case value_t::object:return JSON_NODE_OBJECT;
-  case value_t::array:return JSON_NODE_ARRAY;
-  case value_t::string:return JSON_NODE_STRING;
-  case value_t::boolean:return JSON_NODE_BOOLEAN;
-    /*case value_t::binary:
-      return "binary";
-    case value_t::discarded:
-      return "discarded";*/
-  case value_t::number_float:return JSON_NODE_FLOAT;
-  case value_t::number_integer:
-  case value_t::number_unsigned:return JSON_NODE_INT;
-  default:return JSON_NODE_MAX;
-  }
+  return internal_JSON_NodeType(node);
 }
 
 template<typename T>
@@ -354,7 +358,7 @@ node_type_t script::JSON_GetType(node_ptr_t node, const std::string key) {
     PLUGIN_LOG("Node does not have item by key '%s'", key.c_str());
     return JSON_CALL_NODE_NOT_EXISTS_ERR;
   }
-  return JSON_NodeType(reinterpret_cast<node_ptr_t>(&((*node)[key])));
+  return internal_JSON_NodeType(reinterpret_cast<node_ptr_t>(&((*node)[key])));
 }
 
 call_result_t script::JSON_ArrayLength(node_ptr_t node, cell *out) {
