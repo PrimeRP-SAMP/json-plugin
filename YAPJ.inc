@@ -28,7 +28,7 @@
     #define PACK_PLUGIN_VERSION(%0,%1,%2) (((%0) << 16) | ((%1) << 8) | (%2))
   #endif
 
-  #define JSON_VERSION PACK_PLUGIN_VERSION(1, 2, 7)
+  #define JSON_VERSION PACK_PLUGIN_VERSION(1, 2, 8)
 
   enum JsonNodeType {
     JSON_NODE_NULL = 64,
