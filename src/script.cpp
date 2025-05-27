@@ -53,7 +53,7 @@ call_result_t script::JSON_Parse(const std::string buffer, node_ptr_t *node) {
     return JSON_CALL_NODE_NOT_EXISTS_ERR;
   try {
     JSON_Cleanup(*node);
-    *node = new nlohmann::ordered_json(nlohmann::ordered_json::parse(cp2utf(buffer)));
+    *node = new nlohmann::ordered_json(nlohmann::ordered_json::parse(iconvlite::cp2utf(buffer)));
     valid_nodes.insert(*node);
     return JSON_CALL_NO_ERR;
   } catch (const std::exception &e) {
@@ -103,10 +103,8 @@ call_result_t script::JSON_SaveFile(const std::filesystem::path filename, const 
 call_result_t script::JSON_Stringify(const node_ptr_t node, cell *out, const cell out_size, const cell indent) {
   ASSERT_NODE_EXISTS(node);
   try {
-    auto str = utf2cp(node->dump(indent));
-    if (!str.has_value())
-      return JSON_CALL_NO_RETURN_STRING_ERR;
-    SetString(out, str.value(), out_size);
+    auto str = iconvlite::utf2cp(node->dump(indent));
+    SetString(out, str, out_size);
     return JSON_CALL_NO_ERR;
   } catch (const std::exception &e) {
     LOG_EXCEPTION(e);
@@ -149,7 +147,7 @@ node_ptr_result_t script::JSON_Float(const float value) {
 }
 
 node_ptr_result_t script::JSON_String(const std::string value) {
-  return internal_JSON_ConstructNode(cp2utf(value));
+  return internal_JSON_ConstructNode(iconvlite::cp2utf(value));
 }
 
 node_ptr_result_t script::JSON_Object(const cell *params) {
@@ -233,7 +231,7 @@ call_result_t script::JSON_SetFloat(node_ptr_t node, const std::string key, cons
 }
 
 call_result_t script::JSON_SetString(node_ptr_t node, const std::string key, const std::string value) {
-  return internal_JSON_SetValue(node, key, cp2utf(value));
+  return internal_JSON_SetValue(node, key, iconvlite::cp2utf(value));
 }
 
 call_result_t script::JSON_SetObject(node_ptr_t node, const std::string key, const node_ptr_t value_node) {
@@ -311,10 +309,8 @@ call_result_t script::JSON_GetString(node_ptr_t node, const std::string key, cel
     return JSON_CALL_WRONG_TYPE_ERR;
   }
   std::string str_ = subnode;
-  auto str = utf2cp(str_);
-  if (!str.has_value())
-    return JSON_CALL_NO_RETURN_STRING_ERR;
-  SetString(out, str.value(), out_size);
+  auto str = iconvlite::utf2cp(str_);
+  SetString(out, str, out_size);
   return JSON_CALL_NO_ERR;
 }
 
@@ -555,10 +551,8 @@ call_result_t script::JSON_GetNodeString(node_ptr_t node, cell *out, cell out_si
     return JSON_CALL_WRONG_TYPE_ERR;
   }
   std::string str_ = *node;
-  auto str = utf2cp(str_);
-  if (!str.has_value())
-    return JSON_CALL_NO_RETURN_STRING_ERR;
-  SetString(out, str.value(), out_size);
+  auto str = iconvlite::utf2cp(str_);
+  SetString(out, str, out_size);
   return JSON_CALL_NO_ERR;
 }
 

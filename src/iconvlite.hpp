@@ -1,109 +1,106 @@
 #pragma once
 
-#include <optional>
+#include <unordered_map>
 #include <string>
 #include <string_view>
+#include <array>
 
-constexpr unsigned table[128] = {
-    0x82D0, 0x83D0, 0x9A80E2, 0x93D1, 0x9E80E2, 0xA680E2, 0xA080E2, 0xA180E2,
-    0xAC82E2, 0xB080E2, 0x89D0, 0xB980E2, 0x8AD0, 0x8CD0, 0x8BD0, 0x8FD0,
-    0x92D1, 0x9880E2, 0x9980E2, 0x9C80E2, 0x9D80E2, 0xA280E2, 0x9380E2, 0x9480E2,
-    0, 0xA284E2, 0x99D1, 0xBA80E2, 0x9AD1, 0x9CD1, 0x9BD1, 0x9FD1,
-    0xA0C2, 0x8ED0, 0x9ED1, 0x88D0, 0xA4C2, 0x90D2, 0xA6C2, 0xA7C2,
-    0x81D0, 0xA9C2, 0x84D0, 0xABC2, 0xACC2, 0xADC2, 0xAEC2, 0x87D0,
-    0xB0C2, 0xB1C2, 0x86D0, 0x96D1, 0x91D2, 0xB5C2, 0xB6C2, 0xB7C2,
-    0x91D1, 0x9684E2, 0x94D1, 0xBBC2, 0x98D1, 0x85D0, 0x95D1, 0x97D1,
-    0x90D0, 0x91D0, 0x92D0, 0x93D0, 0x94D0, 0x95D0, 0x96D0, 0x97D0,
-    0x98D0, 0x99D0, 0x9AD0, 0x9BD0, 0x9CD0, 0x9DD0, 0x9ED0, 0x9FD0,
-    0xA0D0, 0xA1D0, 0xA2D0, 0xA3D0, 0xA4D0, 0xA5D0, 0xA6D0, 0xA7D0,
-    0xA8D0, 0xA9D0, 0xAAD0, 0xABD0, 0xACD0, 0xADD0, 0xAED0, 0xAFD0,
-    0xB0D0, 0xB1D0, 0xB2D0, 0xB3D0, 0xB4D0, 0xB5D0, 0xB6D0, 0xB7D0,
-    0xB8D0, 0xB9D0, 0xBAD0, 0xBBD0, 0xBCD0, 0xBDD0, 0xBED0, 0xBFD0,
-    0x80D1, 0x81D1, 0x82D1, 0x83D1, 0x84D1, 0x85D1, 0x86D1, 0x87D1,
-    0x88D1, 0x89D1, 0x8AD1, 0x8BD1, 0x8CD1, 0x8DD1, 0x8ED1, 0x8FD1
+namespace iconvlite {
+constexpr std::array<uint32_t, 128> cp1251_to_unicode = {
+    0x0402, 0x0403, 0x201A, 0x0453, 0x201E, 0x2026, 0x2020, 0x2021,
+    0x20AC, 0x2030, 0x0409, 0x2039, 0x040A, 0x040C, 0x040B, 0x040F,
+    0x0452, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014,
+    0x0000, 0x2122, 0x0459, 0x203A, 0x045A, 0x045C, 0x045B, 0x045F,
+    0x00A0, 0x040E, 0x045E, 0x0408, 0x00A4, 0x0490, 0x00A6, 0x00A7,
+    0x0401, 0x00A9, 0x0404, 0x00AB, 0x00AC, 0x00AD, 0x00AE, 0x0407,
+    0x00B0, 0x00B1, 0x0406, 0x0456, 0x0491, 0x00B5, 0x00B6, 0x00B7,
+    0x0451, 0x2116, 0x0454, 0x00BB, 0x0458, 0x0405, 0x0455, 0x0457,
+    0x0410, 0x0411, 0x0412, 0x0413, 0x0414, 0x0415, 0x0416, 0x0417,
+    0x0418, 0x0419, 0x041A, 0x041B, 0x041C, 0x041D, 0x041E, 0x041F,
+    0x0420, 0x0421, 0x0422, 0x0423, 0x0424, 0x0425, 0x0426, 0x0427,
+    0x0428, 0x0429, 0x042A, 0x042B, 0x042C, 0x042D, 0x042E, 0x042F,
+    0x0430, 0x0431, 0x0432, 0x0433, 0x0434, 0x0435, 0x0436, 0x0437,
+    0x0438, 0x0439, 0x043A, 0x043B, 0x043C, 0x043D, 0x043E, 0x043F,
+    0x0440, 0x0441, 0x0442, 0x0443, 0x0444, 0x0445, 0x0446, 0x0447,
+    0x0448, 0x0449, 0x044A, 0x044B, 0x044C, 0x044D, 0x044E, 0x044F
 };
 
-inline std::string cp2utf(std::string_view s) {
-    std::string ns;
-    ns.reserve(s.size() * 4);
-    for (const char k : s) {
-      auto i = static_cast<unsigned char>(k);
-        if (i & 0x80) {
-            int v = table[(0x7f & i)];
-            if (v) {
-                ns.push_back(static_cast<char>(v & 0xFF));
-                ns.push_back(static_cast<char>((v >> 8) & 0xFF));
-                if (v >>= 16)
-                    ns.push_back(static_cast<char>(v & 0xFF));
-            }
-        }
-        else {
-            ns.push_back(static_cast<char>(i));
-        }
+const std::unordered_map<uint32_t, unsigned char> unicode_to_cp1251 = [] {
+  std::unordered_map<uint32_t, unsigned char> m;
+  for (unsigned char i = 0; i < 0x80; ++i) {
+    m[i] = i; // ASCII
+  }
+  for (size_t i = 0; i < cp1251_to_unicode.size(); ++i) {
+    if (cp1251_to_unicode[i]) {
+      m[cp1251_to_unicode[i]] = static_cast<unsigned char>(i + 0x80);
     }
-    return ns;
+  }
+  return m;
+}();
+
+inline std::string cp2utf(const std::string_view &s) {
+  std::string result;
+  result.reserve(s.size() * 2);
+
+  for (unsigned char ch : s) {
+    if (ch < 0x80) {
+      result.push_back(ch);
+    } else {
+      uint32_t code = cp1251_to_unicode[ch - 0x80];
+      if (code < 0x800) {
+        result.push_back(static_cast<char>(0xC0 | (code >> 6)));
+        result.push_back(static_cast<char>(0x80 | (code & 0x3F)));
+      } else {
+        result.push_back(static_cast<char>(0xE0 | (code >> 12)));
+        result.push_back(static_cast<char>(0x80 | ((code >> 6) & 0x3F)));
+        result.push_back(static_cast<char>(0x80 | (code & 0x3F)));
+      }
+    }
+  }
+
+  return result;
 }
 
-inline std::optional<std::string> utf2cp(std::string_view s) {
-    std::string out;
-    out.reserve(s.size());
-    for (auto i = 0u; i < s.size() && s[i] != 0; ++i) {
-        auto prefix = static_cast<unsigned char>(s[i]);
-        if ((prefix & 0x80) == 0) {
-            out.push_back(static_cast<char>(prefix));
-        }
-        else if ((~prefix) & 0x20) {
-            auto suffix = static_cast<unsigned char>(s[i + 1]);
+inline std::string utf2cp(const std::string_view &s) {
+  std::string result;
+  result.reserve(s.size());
 
-            const int first5bit = (prefix & 0b11111) << 6;
-            const int sec6bit = suffix & 0b111111;
-            const int unicode_char = first5bit + sec6bit;
+  for (size_t i = 0, slen = s.size(); i < slen;) {
+    uint32_t code = 0;
+    const auto c = static_cast<unsigned char>(s[i]);
 
-            if (unicode_char >= 0x410 && unicode_char <= 0x44F) {
-                out.push_back(static_cast<char>(unicode_char - 0x350));
-            }
-            else if (unicode_char >= 0x80 && unicode_char <= 0xFF) {
-                out.push_back(static_cast<char>(unicode_char));
-            }
-            else if (unicode_char >= 0x402 && unicode_char <= 0x403) {
-                out.push_back(static_cast<char>(unicode_char - 0x382));
-            }
-            else {
-                unsigned utf_8 = (suffix << 8) | (prefix);
-                auto k = 0;
-                for (const unsigned c : table) {
-                    if (c == utf_8) {
-                        out.push_back(static_cast<char>(k));
-                        break;
-                    }
-                    ++k;
-                }
-            }
-            ++i;
-        }
-        else if ((~prefix) & 0x10) {
-            auto middle = static_cast<unsigned char>(s[i + 1]);
-            auto suffix = static_cast<unsigned char>(s[i + 2]);
-
-            const int first4bit = (prefix & 0b1111) << 12;
-            const int sec6bit = (middle & 0b111111) << 6;
-            const int third6bit = (suffix & 0b111111);
-            const int unicode_char = first4bit + sec6bit + third6bit;
-
-            unsigned utf_8 = (suffix << 16) | (middle << 8) | (prefix);
-            auto k = 0;
-            for (const unsigned c : table) {
-                if (c == utf_8) {
-                    out.push_back(static_cast<char>(k));
-                    break;
-                }
-                ++k;
-            }
-            i += 2;
-        }
-        else {
-            return std::nullopt;
-        }
+    if (c < 0x80) {
+      code = c;
+      ++i;
+    } else if ((c & 0xE0) == 0xC0 && i + 1 < s.size()) {
+      const auto c1 = static_cast<unsigned char>(s[i + 1]);
+      if ((c1 & 0xC0) != 0x80) {
+        result.push_back('?');
+        ++i;
+        continue;
+      }
+      code = ((c & 0x1F) << 6) | (c1 & 0x3F);
+      i += 2;
+    } else if ((c & 0xF0) == 0xE0 && i + 2 < s.size()) {
+      const auto c1 = static_cast<unsigned char>(s[i + 1]);
+      const auto c2 = static_cast<unsigned char>(s[i + 2]);
+      if ((c1 & 0xC0) != 0x80 || (c2 & 0xC0) != 0x80) {
+        result.push_back('?');
+        ++i;
+        continue;
+      }
+      code = ((c & 0x0F) << 12) | ((c1 & 0x3F) << 6) | (c2 & 0x3F);
+      i += 3;
+    } else {
+      result.push_back('?');
+      ++i;
+      continue;
     }
-    return out;
+
+    const auto it = unicode_to_cp1251.find(code);
+    result.push_back(it != unicode_to_cp1251.cend() ? static_cast<char>(it->second) : '?');
+  }
+
+  return result;
+}
 }
